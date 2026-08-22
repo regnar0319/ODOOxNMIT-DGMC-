@@ -18,7 +18,40 @@ const state = {
   certifications: [
     { name: 'SHRM-CP', organization: 'Society for Human Resource Management', date: '2024-02-22' },
     { name: 'Oracle HCM', organization: 'Oracle University', date: '2023-09-10' }
-  ]
+  ],
+  employees: [
+    { id: 1, name: 'Amara Mensah', employeeId: 'DF-2040', department: 'Design & Experience', designation: 'Product Designer', email: 'amara.mensah@dayflow.com', status: 'Active', joined: '2022-03-14', phone: '+91 98765 43210', manager: 'Riya Kapoor', location: 'Bengaluru, IN', avatar: 'AM' },
+    { id: 2, name: 'Daniel Reed', employeeId: 'DF-8812', department: 'Engineering', designation: 'Frontend Engineer', email: 'daniel.reed@dayflow.com', status: 'On Leave', joined: '2021-06-08', phone: '+91 98450 77111', manager: 'Sonia Mehta', location: 'Hyderabad, IN', avatar: 'DR' },
+    { id: 3, name: 'Grace Kim', employeeId: 'DF-4711', department: 'Finance', designation: 'Senior Accountant', email: 'grace.kim@dayflow.com', status: 'Active', joined: '2023-11-12', phone: '+91 98234 55678', manager: 'Nina Shah', location: 'Mumbai, IN', avatar: 'GK' },
+    { id: 4, name: 'Noah Williams', employeeId: 'DF-7716', department: 'Support', designation: 'Customer Success Manager', email: 'noah.williams@dayflow.com', status: 'Active', joined: '2024-02-21', phone: '+91 98110 88990', manager: 'Meera Nair', location: 'Pune, IN', avatar: 'NW' },
+    { id: 5, name: 'Sofia Mensah', employeeId: 'DF-1269', department: 'People Ops', designation: 'HR Generalist', email: 'sofia.mensah@dayflow.com', status: 'Inactive', joined: '2020-09-06', phone: '+91 99882 10101', manager: 'Amelia Moore', location: 'Chennai, IN', avatar: 'SM' },
+    { id: 6, name: 'Rita Patel', employeeId: 'DF-5012', department: 'Finance', designation: 'Finance Analyst', email: 'rita.patel@dayflow.com', status: 'Active', joined: '2024-04-18', phone: '+91 97654 33441', manager: 'Nina Shah', location: 'Delhi, IN', avatar: 'RP' }
+  ],
+  employeeFilters: {
+    search: '',
+    department: 'All',
+    status: 'All',
+    designation: 'All',
+    joined: 'All'
+  },
+  timeOff: {
+    role: 'admin',
+    filters: {
+      search: '',
+      leaveType: 'All',
+      status: 'All',
+      department: 'All',
+      dateRange: 'All'
+    },
+    requests: [
+      { id: 1, employee: { name: 'Amara Mensah', id: 'DF-2040', department: 'Operations', avatar: 'AM' }, leaveType: 'Paid Leave', start: '2026-08-14', end: '2026-08-16', requestDate: '2026-08-10', status: 'Pending', remarks: 'Family trip planned for the long weekend.', hrComment: '' },
+      { id: 2, employee: { name: 'Daniel Reed', id: 'DF-8812', department: 'Engineering', avatar: 'DR' }, leaveType: 'Sick Leave', start: '2026-08-09', end: '2026-08-10', requestDate: '2026-08-08', status: 'Approved', remarks: 'Medical rest recommended by physician.', hrComment: 'Approved for the requested dates.' },
+      { id: 3, employee: { name: 'Grace Kim', id: 'DF-4711', department: 'Finance', avatar: 'GK' }, leaveType: 'Unpaid Leave', start: '2026-08-22', end: '2026-08-25', requestDate: '2026-08-11', status: 'Pending', remarks: 'Personal travel and family commitment.', hrComment: '' },
+      { id: 4, employee: { name: 'Sofia Mensah', id: 'DF-1269', department: 'People Ops', avatar: 'SM' }, leaveType: 'Paid Leave', start: '2026-08-18', end: '2026-08-19', requestDate: '2026-08-07', status: 'Rejected', remarks: 'Requested time off for a wedding event.', hrComment: 'Please provide additional documentation.' },
+      { id: 5, employee: { name: 'Noah Williams', id: 'DF-7716', department: 'Support', avatar: 'NW' }, leaveType: 'Sick Leave', start: '2026-08-26', end: '2026-08-27', requestDate: '2026-08-18', status: 'Pending', remarks: 'Doctor consultation and short recovery period.', hrComment: '' },
+      { id: 6, employee: { name: 'Amelia Moore', id: 'EMP001', department: 'Human Resources', avatar: 'AM' }, leaveType: 'Paid Leave', start: '2026-08-28', end: '2026-08-29', requestDate: '2026-08-19', status: 'Approved', remarks: 'Wellness break and rest after a busy quarter.', hrComment: 'Approved for the requested dates.' }
+    ]
+  }
 };
 
 const pageContent = document.getElementById('page-content');
@@ -323,31 +356,445 @@ function renderAttendanceView() {
   render(rows);
 }
 
-function renderTimeOffView() {
-  pageContent.innerHTML = `
-    <div class="two-col-grid">
-      <section class="card panel-card">
-        <div class="panel-header">
-          <h3>Leave Balance</h3>
-          <button type="button" class="primary-button">Apply Leave</button>
-        </div>
-        <div class="mini-stats">
-          <div><span>Paid</span><strong>14 Days</strong></div>
-          <div><span>Sick</span><strong>7 Days</strong></div>
-          <div><span>Unpaid</span><strong>3 Days</strong></div>
-        </div>
-      </section>
+function formatLeaveDate(value) {
+  const date = new Date(`${value}T00:00:00`);
+  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+}
 
-      <section class="card panel-card">
-        <div class="panel-header"><h3>Requests</h3></div>
-        <ul class="list-stack">
-          <li><span>Annual Leave</span><strong>14 Aug</strong><em class="pending">Pending</em></li>
-          <li><span>Sick Leave</span><strong>09 Aug</strong><em class="approved">Approved</em></li>
-          <li><span>Personal Leave</span><strong>02 Aug</strong><em class="rejected">Rejected</em></li>
-        </ul>
+function getRequestDuration(start, end) {
+  const diff = new Date(`${end}T00:00:00`) - new Date(`${start}T00:00:00`);
+  const days = Math.max(1, Math.round(diff / 86400000) + 1);
+  return `${days} day${days > 1 ? 's' : ''}`;
+}
+
+function getLeaveBadge(status) {
+  if (status === 'Pending') return 'status-badge warning';
+  if (status === 'Approved') return 'status-badge success';
+  return 'status-badge danger';
+}
+
+function renderTimeOffView() {
+  const role = state.timeOff.role;
+  const filteredRequests = state.timeOff.requests.filter((request) => {
+    const fullText = `${request.employee.name} ${request.employee.id} ${request.leaveType} ${request.status}`.toLowerCase();
+    const matchesSearch = !state.timeOff.filters.search || fullText.includes(state.timeOff.filters.search.toLowerCase());
+    const matchesType = state.timeOff.filters.leaveType === 'All' || request.leaveType === state.timeOff.filters.leaveType;
+    const matchesStatus = state.timeOff.filters.status === 'All' || request.status === state.timeOff.filters.status;
+    const matchesDepartment = state.timeOff.filters.department === 'All' || request.employee.department === state.timeOff.filters.department;
+    const matchesDateRange = state.timeOff.filters.dateRange === 'All' || state.timeOff.filters.dateRange === 'This month';
+    return matchesSearch && matchesType && matchesStatus && matchesDepartment && matchesDateRange;
+  });
+
+  const employeeRequests = state.timeOff.requests.filter((request) => request.employee.id === 'EMP001');
+  const listSource = role === 'employee' ? employeeRequests : filteredRequests;
+  const summary = {
+    pending: state.timeOff.requests.filter((request) => request.status === 'Pending').length,
+    approved: state.timeOff.requests.filter((request) => request.status === 'Approved').length,
+    rejected: state.timeOff.requests.filter((request) => request.status === 'Rejected').length,
+    onLeave: 14
+  };
+
+  const departmentOptions = ['All', ...new Set(state.timeOff.requests.map((request) => request.employee.department))];
+
+  const tableRows = listSource.length ? listSource.map((request) => `
+    <tr>
+      <td>
+        <div class="employee-cell">
+          <span class="mini-avatar">${request.employee.avatar}</span>
+          <div>
+            <strong>${request.employee.name}</strong>
+            <small>${request.employee.id}</small>
+          </div>
+        </div>
+      </td>
+      <td><span class="leave-type-pill">${request.leaveType}</span></td>
+      <td>
+        <div class="date-range-cell">
+          <strong>${formatLeaveDate(request.start)} – ${formatLeaveDate(request.end)}</strong>
+          <small>${getRequestDuration(request.start, request.end)}</small>
+        </div>
+      </td>
+      <td>${getRequestDuration(request.start, request.end)}</td>
+      <td>${formatLeaveDate(request.requestDate)}</td>
+      <td><span class="${getLeaveBadge(request.status)}"><span class="status-dot"></span>${request.status}</span></td>
+      <td>
+        <div class="row-actions">
+          ${request.status === 'Pending' ? '<button type="button" class="action-button approve" data-timeoff-action="approve" data-timeoff-id="' + request.id + '">Approve</button><button type="button" class="action-button reject" data-timeoff-action="reject" data-timeoff-id="' + request.id + '">Reject</button>' : '<button type="button" class="action-button secondary" data-timeoff-action="details" data-timeoff-id="' + request.id + '">View Details</button>'}
+        </div>
+      </td>
+    </tr>
+  `).join('') : `
+    <tr>
+      <td colspan="7">
+        <div class="empty-timeoff-state">
+          <h4>${role === 'employee' ? "You haven't submitted any time off requests yet." : 'No time off requests'}</h4>
+          <p>${role === 'employee' ? 'Start your leave request with a quick form.' : 'There are no leave requests matching your current filters.'}</p>
+          <button type="button" class="secondary-button" data-timeoff-action="apply">${role === 'employee' ? 'Apply for Leave' : 'Clear Filters'}</button>
+        </div>
+      </td>
+    </tr>
+  `;
+
+  pageContent.innerHTML = `
+    <section class="timeoff-shell">
+      <header class="page-header timeoff-header-row">
+        <div>
+          <p class="eyebrow">WORKFORCE</p>
+          <h1>Time Off</h1>
+          <p id="page-description">Manage leave requests, time-off records and approvals.</p>
+        </div>
+        <div class="header-actions">
+          <div class="segmented role-switcher" aria-label="Time off role switcher">
+            <button type="button" class="${role === 'admin' ? 'active' : ''}" data-timeoff-role="admin">Admin</button>
+            <button type="button" class="${role === 'employee' ? 'active' : ''}" data-timeoff-role="employee">Employee</button>
+          </div>
+          ${role === 'admin' ? '<button type="button" class="primary-button" data-timeoff-action="add">+ Add Time Off</button>' : '<button type="button" class="primary-button" data-timeoff-action="apply">Apply for Leave</button>'}
+        </div>
+      </header>
+
+      <div class="stats-grid timeoff-stats">
+        <article class="metric-card card">
+          <span>Pending Requests</span>
+          <strong>${summary.pending}</strong>
+          <small>Needs attention</small>
+        </article>
+        <article class="metric-card card">
+          <span>Approved</span>
+          <strong>42</strong>
+          <small>This month</small>
+        </article>
+        <article class="metric-card card">
+          <span>Rejected</span>
+          <strong>6</strong>
+          <small>This month</small>
+        </article>
+        <article class="metric-card card">
+          <span>On Leave Today</span>
+          <strong>${summary.onLeave}</strong>
+          <small>Employees</small>
+        </article>
+      </div>
+
+      <section class="card table-card timeoff-card">
+        <div class="card-header timeoff-section-header">
+          <div>
+            <h3>Time Off Requests</h3>
+            <p>Review and manage employee leave requests.</p>
+          </div>
+          <div class="pending-flag">
+            <span class="status-dot pending"></span>
+            ${summary.pending} Pending Requests
+          </div>
+        </div>
+
+        <div class="timeoff-toolbar">
+          <label class="search-field">
+            <span class="sr-only">Search</span>
+            <input id="timeoff-search" type="search" autocomplete="off" value="${state.timeOff.filters.search}" placeholder="Search employees or leave requests..." />
+          </label>
+
+          <select id="timeoff-leave-type">
+            <option value="All">Leave Type</option>
+            <option value="Paid Leave" ${state.timeOff.filters.leaveType === 'Paid Leave' ? 'selected' : ''}>Paid Leave</option>
+            <option value="Sick Leave" ${state.timeOff.filters.leaveType === 'Sick Leave' ? 'selected' : ''}>Sick Leave</option>
+            <option value="Unpaid Leave" ${state.timeOff.filters.leaveType === 'Unpaid Leave' ? 'selected' : ''}>Unpaid Leave</option>
+          </select>
+
+          <select id="timeoff-status">
+            <option value="All">Status</option>
+            <option value="Pending" ${state.timeOff.filters.status === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="Approved" ${state.timeOff.filters.status === 'Approved' ? 'selected' : ''}>Approved</option>
+            <option value="Rejected" ${state.timeOff.filters.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+          </select>
+
+          <select id="timeoff-department">
+            <option value="All">Department</option>
+            ${departmentOptions.map((value) => `<option value="${value}" ${state.timeOff.filters.department === value ? 'selected' : ''}>${value}</option>`).join('')}
+          </select>
+
+          <select id="timeoff-date-range">
+            <option value="All">Date Range</option>
+            <option value="This month" ${state.timeOff.filters.dateRange === 'This month' ? 'selected' : ''}>This month</option>
+          </select>
+
+          ${state.timeOff.filters.search || state.timeOff.filters.leaveType !== 'All' || state.timeOff.filters.status !== 'All' || state.timeOff.filters.department !== 'All' || state.timeOff.filters.dateRange !== 'All' ? '<button type="button" class="link-button compact-link" id="timeoff-clear-filters">Clear Filters</button>' : ''}
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Leave Type</th>
+                <th>Date Range</th>
+                <th>Duration</th>
+                <th>Request Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </div>
       </section>
+    </section>
+
+    <div id="modal-backdrop" class="modal-backdrop hidden"></div>
+
+    <aside id="leave-details-drawer" class="modal drawer hidden" aria-label="Leave request details">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow small">Request Details</p>
+          <h3>Leave Request</h3>
+        </div>
+        <button type="button" class="close-button" data-close="leave-details-drawer" aria-label="Close request details">×</button>
+      </div>
+      <div id="leave-details-content"></div>
+    </aside>
+
+    <aside id="leave-request-modal" class="modal small hidden" aria-label="Apply for leave">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow small">${role === 'employee' ? 'My Time Off' : 'Add Time Off'}</p>
+          <h3>${role === 'employee' ? 'Apply for Leave' : 'Create Time Off Record'}</h3>
+        </div>
+        <button type="button" class="close-button" data-close="leave-request-modal" aria-label="Close dialog">×</button>
+      </div>
+      <form id="leave-request-form" class="modal-form compact-form">
+        <div class="field-group">
+          <label>
+            Leave Type
+            <select name="leaveType" required>
+              <option value="">Select leave type</option>
+              <option>Paid Leave</option>
+              <option>Sick Leave</option>
+              <option>Unpaid Leave</option>
+            </select>
+          </label>
+          <div class="two-up">
+            <label>
+              Start Date
+              <input type="date" name="startDate" required />
+            </label>
+            <label>
+              End Date
+              <input type="date" name="endDate" required />
+            </label>
+          </div>
+          <label>
+            Remarks
+            <textarea name="remarks" rows="4" required placeholder="Add relevant information for the leave request."></textarea>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="secondary-button" data-close="leave-request-modal">Cancel</button>
+          <button type="submit" class="primary-button">Submit Request</button>
+        </div>
+      </form>
+    </aside>
+  `;
+
+  const detailsContainer = document.getElementById('leave-details-content');
+  if (detailsContainer) {
+    const selectedRequest = state.timeOff.requests[0];
+    if (selectedRequest) {
+      detailsContainer.innerHTML = renderLeaveDetails(selectedRequest);
+    }
+  }
+
+  attachTimeOffListeners();
+}
+
+function renderLeaveDetails(request) {
+  const role = state.timeOff.role;
+  const data = request || state.timeOff.requests[0];
+  const detailStatus = data.status === 'Pending' ? 'Pending' : data.status;
+  return `
+    <div class="drawer-body">
+      <div class="details-employee">
+        <div class="details-avatar">${data.employee.avatar}</div>
+        <div>
+          <h4>${data.employee.name}</h4>
+          <p>${data.employee.id}</p>
+          <span>${data.employee.department}</span>
+        </div>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-block">
+          <span>Leave Type</span>
+          <strong>${data.leaveType}</strong>
+        </div>
+        <div class="detail-block">
+          <span>Start Date</span>
+          <strong>${formatLeaveDate(data.start)}</strong>
+        </div>
+        <div class="detail-block">
+          <span>End Date</span>
+          <strong>${formatLeaveDate(data.end)}</strong>
+        </div>
+        <div class="detail-block">
+          <span>Duration</span>
+          <strong>${getRequestDuration(data.start, data.end)}</strong>
+        </div>
+        <div class="detail-block">
+          <span>Request Date</span>
+          <strong>${formatLeaveDate(data.requestDate)}</strong>
+        </div>
+        <div class="detail-block">
+          <span>Status</span>
+          <strong>${detailStatus}</strong>
+        </div>
+      </div>
+
+      <div class="detail-panel">
+        <h5>Remarks</h5>
+        <p>${data.remarks}</p>
+      </div>
+
+      <div class="detail-panel">
+        <h5>HR Comment</h5>
+        <p>${data.hrComment || 'No comment added yet.'}</p>
+      </div>
+
+      <form id="leave-decision-form" data-timeoff-id="${data.id}" class="decision-form">
+        <label class="comment-field">
+          Comment
+          <textarea name="comment" rows="3" placeholder="Approved for the requested dates."></textarea>
+        </label>
+        <div class="decision-actions">
+          <button type="button" class="secondary-button" data-close="leave-details-drawer">Close</button>
+          ${role === 'admin' ? '<button type="submit" class="primary-button" data-timeoff-action="approve-submit">Approve</button><button type="button" class="secondary-button danger-button" data-timeoff-action="reject-submit" data-timeoff-id="' + data.id + '">Reject</button>' : '<button type="button" class="primary-button" data-timeoff-action="close-detail">Done</button>'}
+        </div>
+      </form>
     </div>
   `;
+}
+
+function attachTimeOffListeners() {
+  const roleButtons = document.querySelectorAll('[data-timeoff-role]');
+  roleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      state.timeOff.role = button.dataset.timeoffRole;
+      renderTimeOffView();
+    });
+  });
+
+  const filterFields = {
+    search: document.getElementById('timeoff-search'),
+    leaveType: document.getElementById('timeoff-leave-type'),
+    status: document.getElementById('timeoff-status'),
+    department: document.getElementById('timeoff-department'),
+    dateRange: document.getElementById('timeoff-date-range')
+  };
+
+  if (filterFields.search) {
+    filterFields.search.addEventListener('input', (event) => {
+      state.timeOff.filters.search = event.target.value;
+      renderTimeOffView();
+    });
+  }
+
+  ['leaveType', 'status', 'department', 'dateRange'].forEach((field) => {
+    if (filterFields[field]) {
+      filterFields[field].addEventListener('change', (event) => {
+        state.timeOff.filters[field] = event.target.value;
+        renderTimeOffView();
+      });
+    }
+  });
+
+  document.getElementById('timeoff-clear-filters')?.addEventListener('click', () => {
+    state.timeOff.filters = { search: '', leaveType: 'All', status: 'All', department: 'All', dateRange: 'All' };
+    renderTimeOffView();
+  });
+
+  document.querySelectorAll('[data-timeoff-action]').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      const { timeoffAction, timeoffId } = event.currentTarget.dataset;
+
+      if (timeoffAction === 'add' || timeoffAction === 'apply') {
+        openModal(document.getElementById('leave-request-modal'));
+        return;
+      }
+
+      if (timeoffAction === 'details') {
+        const request = state.timeOff.requests.find((item) => item.id === Number(timeoffId));
+        if (request) {
+          const drawer = document.getElementById('leave-details-drawer');
+          const detailsContent = document.getElementById('leave-details-content');
+          detailsContent.innerHTML = renderLeaveDetails(request);
+          openModal(drawer);
+
+          const decisionForm = document.getElementById('leave-decision-form');
+          decisionForm?.addEventListener('submit', (submitEvent) => {
+            submitEvent.preventDefault();
+            const formData = new FormData(submitEvent.currentTarget);
+            const targetRequest = state.timeOff.requests.find((item) => item.id === Number(submitEvent.currentTarget.dataset.timeoffId));
+            if (targetRequest) {
+              targetRequest.status = 'Approved';
+              targetRequest.hrComment = formData.get('comment')?.toString().trim() || 'Approved for the requested dates.';
+              renderTimeOffView();
+              showToast('Leave request approved successfully.');
+            }
+          });
+
+          document.querySelector('[data-timeoff-action="reject-submit"]')?.addEventListener('click', () => {
+            const targetRequest = state.timeOff.requests.find((item) => item.id === Number(timeoffId));
+            if (targetRequest) {
+              targetRequest.status = 'Rejected';
+              targetRequest.hrComment = document.querySelector('#leave-decision-form textarea')?.value?.trim() || 'Please provide additional documentation.';
+              renderTimeOffView();
+              showToast('Leave request rejected successfully.');
+            }
+          });
+        }
+        return;
+      }
+
+      if (timeoffAction === 'approve' || timeoffAction === 'reject') {
+        const request = state.timeOff.requests.find((item) => item.id === Number(timeoffId));
+        if (!request) return;
+
+        request.status = timeoffAction === 'approve' ? 'Approved' : 'Rejected';
+        request.hrComment = timeoffAction === 'approve' ? 'Approved for the requested dates.' : 'Please provide additional documentation.';
+        renderTimeOffView();
+        showToast(timeoffAction === 'approve' ? 'Leave request approved successfully.' : 'Leave request rejected successfully.');
+      }
+    });
+  });
+
+  document.getElementById('leave-request-form')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const leaveType = formData.get('leaveType')?.toString().trim();
+    const startDate = formData.get('startDate')?.toString();
+    const endDate = formData.get('endDate')?.toString();
+    const remarks = formData.get('remarks')?.toString().trim();
+
+    if (!leaveType || !startDate || !endDate || !remarks) {
+      showToast('Please complete all fields before submitting.');
+      return;
+    }
+
+    state.timeOff.requests.unshift({
+      id: Date.now(),
+      employee: { name: 'Amelia Moore', id: 'EMP001', department: 'Human Resources', avatar: 'AM' },
+      leaveType,
+      start: startDate,
+      end: endDate,
+      requestDate: new Date().toISOString().slice(0, 10),
+      status: 'Pending',
+      remarks,
+      hrComment: ''
+    });
+
+    form.reset();
+    closeModal(document.getElementById('leave-request-modal'));
+    renderTimeOffView();
+    showToast('Leave request submitted successfully.');
+  });
 }
 
 function renderPayrollView() {
@@ -378,30 +825,515 @@ function renderPayrollView() {
   `;
 }
 
-function renderEmployeesView() {
-  pageContent.innerHTML = `
-    <section class="card panel-card table-card">
-      <div class="panel-header">
+function formatJoinedDate(value) {
+  return new Date(`${value}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function getEmployeeStatusClass(status) {
+  if (status === 'Active') return 'status-pill success';
+  if (status === 'On Leave') return 'status-pill warning';
+  return 'status-pill neutral';
+}
+
+function renderEmployeeDetailsDrawer(employee) {
+  return `
+    <div class="drawer-body employee-drawer-body">
+      <div class="details-employee employee-details-header">
+        <div class="details-avatar">${employee.avatar}</div>
         <div>
-          <h3>Employees</h3>
-          <small>Manage your organization’s employee roster.</small>
+          <h4>${employee.name}</h4>
+          <p>${employee.designation}</p>
+          <span>${employee.employeeId}</span>
         </div>
-        <button type="button" class="primary-button">Add Employee</button>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Employee</th><th>ID</th><th>Department</th><th>Designation</th><th>Email</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Amelia Moore</td><td>EMP001</td><td>Human Resources</td><td>HR Manager</td><td>admin@company.com</td><td><span class="pill success">Active</span></td><td><button type="button" class="table-action">View</button></td></tr>
-            <tr><td>Rita Patel</td><td>EMP012</td><td>Finance</td><td>Accountant</td><td>rita.patel@company.com</td><td><span class="pill success">Active</span></td><td><button type="button" class="table-action">View</button></td></tr>
-            <tr><td>Daniel Reed</td><td>EMP042</td><td>Operations</td><td>Supervisor</td><td>daniel.reed@company.com</td><td><span class="pill danger">Inactive</span></td><td><button type="button" class="table-action">View</button></td></tr>
-          </tbody>
-        </table>
+
+      <div class="quick-actions-row">
+        <button type="button" class="secondary-button" data-employee-action="view-profile" data-employee-id="${employee.id}">View Profile</button>
+        <button type="button" class="secondary-button" data-employee-action="attendance" data-employee-id="${employee.id}">Attendance</button>
+        <button type="button" class="secondary-button" data-employee-action="time-off" data-employee-id="${employee.id}">Time Off</button>
       </div>
-    </section>
+
+      <div class="details-grid employee-details-grid">
+        <div class="detail-block">
+          <span>Email</span>
+          <strong>${employee.email}</strong>
+        </div>
+        <div class="detail-block">
+          <span>Phone</span>
+          <strong>${employee.phone}</strong>
+        </div>
+        <div class="detail-block">
+          <span>Department</span>
+          <strong>${employee.department}</strong>
+        </div>
+        <div class="detail-block">
+          <span>Manager</span>
+          <strong>${employee.manager}</strong>
+        </div>
+        <div class="detail-block">
+          <span>Location</span>
+          <strong>${employee.location}</strong>
+        </div>
+        <div class="detail-block">
+          <span>Joining Date</span>
+          <strong>${formatJoinedDate(employee.joined)}</strong>
+        </div>
+      </div>
+
+      <div class="detail-panel employee-stat-panel">
+        <h5>Quick Stats</h5>
+        <div class="employee-mini-stats">
+          <div><span>Attendance</span><strong>96%</strong></div>
+          <div><span>Leave Balance</span><strong>14 days</strong></div>
+          <div><span>Payroll</span><strong>Updated</strong></div>
+        </div>
+      </div>
+    </div>
   `;
+}
+
+function renderEmployeesView() {
+  const filteredEmployees = state.employees.filter((employee) => {
+    const searchText = `${employee.name} ${employee.employeeId} ${employee.email}`.toLowerCase();
+    const matchesSearch = !state.employeeFilters.search || searchText.includes(state.employeeFilters.search.toLowerCase());
+    const matchesDepartment = state.employeeFilters.department === 'All' || employee.department === state.employeeFilters.department;
+    const matchesStatus = state.employeeFilters.status === 'All' || employee.status === state.employeeFilters.status;
+    const matchesDesignation = state.employeeFilters.designation === 'All' || employee.designation === state.employeeFilters.designation;
+    const matchesJoined = state.employeeFilters.joined === 'All' || state.employeeFilters.joined === 'Recently joined';
+    return matchesSearch && matchesDepartment && matchesStatus && matchesDesignation && matchesJoined;
+  });
+
+  const departmentOptions = ['All', ...new Set(state.employees.map((employee) => employee.department))];
+  const designationOptions = ['All', ...new Set(state.employees.map((employee) => employee.designation))];
+  const summary = {
+    total: state.employees.length,
+    active: state.employees.filter((employee) => employee.status === 'Active').length,
+    onLeave: state.employees.filter((employee) => employee.status === 'On Leave').length,
+    newThisMonth: 8
+  };
+
+  const rows = filteredEmployees.length ? filteredEmployees.map((employee) => `
+    <tr data-employee-row="${employee.id}">
+      <td>
+        <div class="employee-cell">
+          <span class="mini-avatar employee-avatar">${employee.avatar}</span>
+          <div>
+            <strong>${employee.name}</strong>
+            <small>${employee.designation}</small>
+          </div>
+        </div>
+      </td>
+      <td>${employee.employeeId}</td>
+      <td>${employee.department}</td>
+      <td>${employee.designation}</td>
+      <td><a href="mailto:${employee.email}">${employee.email}</a></td>
+      <td><span class="${getEmployeeStatusClass(employee.status)}"><span class="status-dot"></span>${employee.status}</span></td>
+      <td>${formatJoinedDate(employee.joined)}</td>
+      <td>
+        <div class="employee-menu-wrap">
+          <button type="button" class="menu-trigger" data-employee-menu="${employee.id}" aria-label="Open employee actions">⋯</button>
+          <div class="employee-menu hidden" data-employee-menu-panel="${employee.id}">
+            <button type="button" data-employee-action="view-profile" data-employee-id="${employee.id}">View Profile</button>
+            <button type="button" data-employee-action="edit" data-employee-id="${employee.id}">Edit Employee</button>
+            <button type="button" data-employee-action="attendance" data-employee-id="${employee.id}">Attendance</button>
+            <button type="button" data-employee-action="time-off" data-employee-id="${employee.id}">Time Off</button>
+            <button type="button" data-employee-action="payroll" data-employee-id="${employee.id}">Payroll</button>
+            <button type="button" data-employee-action="documents" data-employee-id="${employee.id}">Documents</button>
+            <button type="button" data-employee-action="deactivate" data-employee-id="${employee.id}">Deactivate</button>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join('') : `
+    <tr>
+      <td colspan="8">
+        <div class="empty-timeoff-state employee-empty-state">
+          <h4>No employees found</h4>
+          <p>Try adjusting your search or filters.</p>
+          <button type="button" class="secondary-button" id="employees-clear-filters">Clear Filters</button>
+        </div>
+      </td>
+    </tr>
+  `;
+
+  pageContent.innerHTML = `
+    <section class="employees-shell">
+      <header class="page-header timeoff-header-row">
+        <div>
+          <p class="eyebrow">WORKFORCE</p>
+          <h1>Employees</h1>
+          <p id="page-description">Manage your organization's employees and their information.</p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="secondary-button" id="employee-export-btn">Export</button>
+          <button type="button" class="primary-button" id="add-employee-btn">+ Add Employee</button>
+        </div>
+      </header>
+
+      <div class="stats-grid timeoff-stats">
+        <article class="metric-card card">
+          <span>Total Employees</span>
+          <strong>${summary.total}</strong>
+          <small>Organization-wide</small>
+        </article>
+        <article class="metric-card card">
+          <span>Active</span>
+          <strong>${summary.active}</strong>
+          <small>Currently active</small>
+        </article>
+        <article class="metric-card card">
+          <span>On Leave</span>
+          <strong>${summary.onLeave}</strong>
+          <small>This period</small>
+        </article>
+        <article class="metric-card card">
+          <span>New This Month</span>
+          <strong>${summary.newThisMonth}</strong>
+          <small>Fresh joins</small>
+        </article>
+      </div>
+
+      <section class="card table-card employee-card">
+        <div class="timeoff-toolbar employee-toolbar">
+          <label class="search-field employee-search">
+            <span class="search-icon">⌕</span>
+            <input id="employee-search" type="search" value="${state.employeeFilters.search}" placeholder="Search employees by name, ID or email..." aria-label="Search employees" />
+          </label>
+
+          <select id="employee-department">
+            ${departmentOptions.map((value) => `<option value="${value}" ${state.employeeFilters.department === value ? 'selected' : ''}>${value === 'All' ? 'Department' : value}</option>`).join('')}
+          </select>
+
+          <select id="employee-status">
+            <option value="All" ${state.employeeFilters.status === 'All' ? 'selected' : ''}>Status</option>
+            <option value="Active" ${state.employeeFilters.status === 'Active' ? 'selected' : ''}>Active</option>
+            <option value="On Leave" ${state.employeeFilters.status === 'On Leave' ? 'selected' : ''}>On Leave</option>
+            <option value="Inactive" ${state.employeeFilters.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+          </select>
+
+          <select id="employee-designation">
+            ${designationOptions.map((value) => `<option value="${value}" ${state.employeeFilters.designation === value ? 'selected' : ''}>${value === 'All' ? 'Designation' : value}</option>`).join('')}
+          </select>
+
+          <select id="employee-joined">
+            <option value="All" ${state.employeeFilters.joined === 'All' ? 'selected' : ''}>Joining Date</option>
+            <option value="Recently joined" ${state.employeeFilters.joined === 'Recently joined' ? 'selected' : ''}>Recently joined</option>
+          </select>
+
+          ${(state.employeeFilters.search || state.employeeFilters.department !== 'All' || state.employeeFilters.status !== 'All' || state.employeeFilters.designation !== 'All' || state.employeeFilters.joined !== 'All') ? '<button type="button" class="link-button compact-link" id="employee-clear-filters">Clear Filters</button>' : ''}
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Employee ID</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+
+        <div class="employee-footer">
+          <span>Showing 1–${Math.min(filteredEmployees.length, 20)} of ${filteredEmployees.length} employees</span>
+          <div class="pagination">
+            <button type="button" class="page-button" disabled>Previous</button>
+            <span class="page-pill active">1</span>
+            <span class="page-pill">2</span>
+            <span class="page-pill">3</span>
+            <button type="button" class="page-button">Next</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div id="modal-backdrop" class="modal-backdrop hidden"></div>
+
+    <aside id="employee-details-drawer" class="modal drawer hidden" aria-label="Employee details drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow small">Employee Details</p>
+          <h3>Employee Profile</h3>
+        </div>
+        <button type="button" class="close-button" data-close="employee-details-drawer" aria-label="Close drawer">×</button>
+      </div>
+      <div id="employee-details-content"></div>
+    </aside>
+
+    <aside id="employee-form-modal" class="modal hidden" aria-label="Employee form modal">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow small">Workforce</p>
+          <h3 id="employee-form-title">Add Employee</h3>
+        </div>
+        <button type="button" class="close-button" data-close="employee-form-modal" aria-label="Close form">×</button>
+      </div>
+      <form id="employee-form" class="modal-form">
+        <div class="field-group">
+          <div class="two-up">
+            <label>
+              Full Name
+              <input type="text" name="fullName" placeholder="Amara Mensah" required />
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" placeholder="employee@dayflow.com" required />
+            </label>
+          </div>
+          <div class="two-up">
+            <label>
+              Phone
+              <input type="tel" name="phone" placeholder="+91 98xxxxxx" />
+            </label>
+            <label>
+              Profile Picture
+              <input type="text" name="avatar" placeholder="AM" />
+            </label>
+          </div>
+          <div class="two-up">
+            <label>
+              Employee ID
+              <input type="text" name="employeeId" placeholder="DF-2040" required />
+            </label>
+            <label>
+              Department
+              <select name="department" required>
+                <option value="">Select department</option>
+                <option>Design & Experience</option>
+                <option>Engineering</option>
+                <option>Finance</option>
+                <option>Support</option>
+                <option>People Ops</option>
+              </select>
+            </label>
+          </div>
+          <div class="two-up">
+            <label>
+              Designation
+              <input type="text" name="designation" placeholder="Product Designer" required />
+            </label>
+            <label>
+              Manager
+              <input type="text" name="manager" placeholder="Riya Kapoor" />
+            </label>
+          </div>
+          <div class="two-up">
+            <label>
+              Location
+              <input type="text" name="location" placeholder="Bengaluru, IN" />
+            </label>
+            <label>
+              Joining Date
+              <input type="date" name="joined" required />
+            </label>
+          </div>
+          <div class="two-up">
+            <label>
+              Role
+              <select name="role">
+                <option>Employee</option>
+                <option>Manager</option>
+                <option>HR</option>
+                <option>Admin</option>
+              </select>
+            </label>
+            <label>
+              Account Status
+              <select name="status">
+                <option value="Active">Active</option>
+                <option value="On Leave">On Leave</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="secondary-button" data-close="employee-form-modal">Cancel</button>
+          <button type="submit" class="primary-button" id="employee-submit-btn">Create Employee</button>
+        </div>
+      </form>
+    </aside>
+  `;
+
+  bindEmployeeInteractions();
+}
+
+function bindEmployeeInteractions() {
+  document.getElementById('add-employee-btn')?.addEventListener('click', () => {
+    const modal = document.getElementById('employee-form-modal');
+    const title = document.getElementById('employee-form-title');
+    const submitButton = document.getElementById('employee-submit-btn');
+    if (title) title.textContent = 'Add Employee';
+    if (submitButton) submitButton.textContent = 'Create Employee';
+    const form = document.getElementById('employee-form');
+    form?.reset();
+    form?.setAttribute('data-mode', 'create');
+    openModal(modal);
+  });
+
+  document.getElementById('employee-export-btn')?.addEventListener('click', () => showToast('Employee export started.'));
+  document.getElementById('employees-clear-filters')?.addEventListener('click', () => {
+    state.employeeFilters = { search: '', department: 'All', status: 'All', designation: 'All', joined: 'All' };
+    renderEmployeesView();
+  });
+
+  document.getElementById('employee-clear-filters')?.addEventListener('click', () => {
+    state.employeeFilters = { search: '', department: 'All', status: 'All', designation: 'All', joined: 'All' };
+    renderEmployeesView();
+  });
+
+  document.getElementById('employee-search')?.addEventListener('input', (event) => {
+    state.employeeFilters.search = event.target.value;
+    renderEmployeesView();
+  });
+
+  ['employee-department', 'employee-status', 'employee-designation', 'employee-joined'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('change', (event) => {
+      const keyMap = {
+        'employee-department': 'department',
+        'employee-status': 'status',
+        'employee-designation': 'designation',
+        'employee-joined': 'joined'
+      };
+      const key = keyMap[id];
+      state.employeeFilters[key] = event.target.value;
+      renderEmployeesView();
+    });
+  });
+
+  document.querySelectorAll('[data-employee-menu]').forEach((trigger) => {
+    trigger.addEventListener('click', (event) => {
+      const employeeId = Number(event.currentTarget.dataset.employeeMenu);
+      const panel = document.querySelector(`[data-employee-menu-panel="${employeeId}"]`);
+      document.querySelectorAll('.employee-menu').forEach((menu) => {
+        if (menu !== panel) menu.classList.add('hidden');
+      });
+      panel?.classList.toggle('hidden');
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    const menuButton = event.target.closest('[data-employee-menu]');
+    const menuItem = event.target.closest('[data-employee-action]');
+    const rowTrigger = event.target.closest('[data-employee-row]');
+
+    if (!menuButton && !menuItem && !rowTrigger) {
+      document.querySelectorAll('.employee-menu').forEach((menu) => menu.classList.add('hidden'));
+    }
+
+    if (menuItem) {
+      const employeeId = Number(menuItem.dataset.employeeId);
+      const employee = state.employees.find((item) => item.id === employeeId);
+      const action = menuItem.dataset.employeeAction;
+
+      if (action === 'view-profile' || action === 'view') {
+        openDrawerEmployee(employee);
+      }
+
+      if (action === 'edit') {
+        const form = document.getElementById('employee-form');
+        const title = document.getElementById('employee-form-title');
+        const submitButton = document.getElementById('employee-submit-btn');
+        title.textContent = 'Edit Employee';
+        submitButton.textContent = 'Save Changes';
+        form.dataset.mode = 'edit';
+        form.dataset.employeeId = employeeId;
+        form.fullName.value = employee.name;
+        form.email.value = employee.email;
+        form.phone.value = employee.phone;
+        form.avatar.value = employee.avatar;
+        form.employeeId.value = employee.employeeId;
+        form.department.value = employee.department;
+        form.designation.value = employee.designation;
+        form.manager.value = employee.manager;
+        form.location.value = employee.location;
+        form.joined.value = employee.joined;
+        form.status.value = employee.status;
+        openModal(document.getElementById('employee-form-modal'));
+      }
+
+      if (action === 'attendance') showToast(`${employee.name} attendance is ready to review.`);
+      if (action === 'time-off') showToast(`${employee.name} time-off records opened.`);
+      if (action === 'payroll') showToast(`${employee.name} payroll summary opened.`);
+      if (action === 'documents') showToast(`${employee.name} documents are not available yet.`);
+      if (action === 'deactivate') {
+        if (employee) {
+          employee.status = 'Inactive';
+          renderEmployeesView();
+          showToast(`${employee.name} status updated to Inactive.`);
+        }
+      }
+    }
+
+    if (rowTrigger) {
+      const employeeId = Number(rowTrigger.dataset.employeeRow);
+      const employee = state.employees.find((item) => item.id === employeeId);
+      if (employee) openDrawerEmployee(employee);
+    }
+  });
+
+  document.getElementById('employee-form')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const employeePayload = {
+      name: formData.get('fullName')?.toString().trim(),
+      email: formData.get('email')?.toString().trim(),
+      phone: formData.get('phone')?.toString().trim() || '—',
+      avatar: (formData.get('avatar')?.toString().trim() || formData.get('fullName')?.toString().trim().split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase()),
+      employeeId: formData.get('employeeId')?.toString().trim(),
+      department: formData.get('department')?.toString().trim(),
+      designation: formData.get('designation')?.toString().trim(),
+      manager: formData.get('manager')?.toString().trim() || 'Unassigned',
+      location: formData.get('location')?.toString().trim() || 'Remote',
+      joined: formData.get('joined')?.toString() || new Date().toISOString().slice(0, 10),
+      status: formData.get('status')?.toString() || 'Active'
+    };
+
+    if (!employeePayload.name || !employeePayload.email || !employeePayload.employeeId || !employeePayload.department || !employeePayload.designation || !employeePayload.joined) {
+      showToast('Please complete all required employee fields.');
+      return;
+    }
+
+    if (form.dataset.mode === 'edit') {
+      const target = state.employees.find((employee) => employee.id === Number(form.dataset.employeeId));
+      if (target) {
+        Object.assign(target, employeePayload);
+        showToast('Employee information updated successfully.');
+      }
+    } else {
+      state.employees.unshift({ id: Date.now(), ...employeePayload });
+      showToast('Employee created successfully.');
+    }
+
+    closeModal(document.getElementById('employee-form-modal'));
+    renderEmployeesView();
+    form.reset();
+  });
+}
+
+function openDrawerEmployee(employee) {
+  if (!employee) return;
+  const drawer = document.getElementById('employee-details-drawer');
+  const content = document.getElementById('employee-details-content');
+  content.innerHTML = renderEmployeeDetailsDrawer(employee);
+  openModal(drawer);
+
+  document.querySelectorAll('[data-employee-action]').forEach((button) => {
+    if (button.dataset.employeeAction === 'view-profile') {
+      button.addEventListener('click', () => {
+        showToast(`${employee.name} profile opened.`);
+      });
+    }
+  });
 }
 
 function renderView(viewKey) {
@@ -627,6 +1559,10 @@ window.addEventListener('click', (event) => {
     closeModal(document.getElementById('profile-modal'));
     closeModal(document.getElementById('skill-modal'));
     closeModal(document.getElementById('cert-modal'));
+    closeModal(document.getElementById('employee-form-modal'));
+    closeModal(document.getElementById('employee-details-drawer'));
+    closeModal(document.getElementById('leave-details-drawer'));
+    closeModal(document.getElementById('leave-request-modal'));
   }
 });
 
