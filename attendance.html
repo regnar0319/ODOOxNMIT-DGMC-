@@ -8,67 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="bg-gray-50">
     <main class="max-w-4xl mx-auto p-6">
-        <header class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold">Attendance</h1><a href="/employee-dashboard.html" class="text-sm">Back</a>
-        </header>
-        <section class="bg-white p-4 rounded shadow mb-4">
-            <div class="flex items-center gap-4">
-                <div><button id="checkBtn" class="px-4 py-2 rounded bg-emerald-600 text-white">Check In</button></div>
-                <div id="statusBadge" class="px-3 py-1 rounded bg-amber-100 text-amber-700">Not checked in</div>
-            </div>
-        </section>
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-white p-4 rounded shadow">
-                <h2 class="font-semibold">Daily view</h2>
-                <p class="text-sm text-slate-600">Status for today</p>
-                <ul class="mt-2 text-sm text-slate-600">
-                    <li>09:02 — Check in</li>
-                    <li>17:10 — Check out</li>
-                </ul>
-            </div>
-            <div class="bg-white p-4 rounded shadow">
-                <h2 class="font-semibold">Weekly view</h2>
-                <p class="text-sm text-slate-600">Summary for the week</p>
-                <table class="w-full text-sm mt-2">
-                    <thead class="text-slate-600">
-                        <tr>
-                            <th>Day</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-t">
-                            <td>Mon</td>
-                            <td><span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-xs">Present</span>
-                            </td>
-                        </tr>
-                        <tr class="border-t">
-                            <td>Tue</td>
-                            <td><span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-xs">Present</span>
-                            </td>
-                        </tr>
-                        <tr class="border-t">
-                            <td>Wed</td>
-                            <td><span class="px-2 py-1 rounded bg-amber-100 text-amber-700 text-xs">Half-day</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+        <h1 class="text-2xl font-bold mb-4">Attendance</h1>
+        <section class="bg-white p-4 rounded shadow"><button id="check"
+                class="px-4 py-2 rounded bg-emerald-700 text-white">Check in</button></section>
     </main>
-    <script>
-        const checkBtn = document.getElementById('checkBtn');
-        const status = document.getElementById('statusBadge');
-        let checked = false;
-        checkBtn.addEventListener('click', async () => {
-            checked = !checked;
-            if (checked) { checkBtn.textContent = 'Check Out'; status.textContent = 'Present'; status.className = 'px-3 py-1 rounded bg-emerald-100 text-emerald-700'; }
-            else { checkBtn.textContent = 'Check In'; status.textContent = 'Not checked in'; status.className = 'px-3 py-1 rounded bg-amber-100 text-amber-700'; }
-            // TODO: call /api/attendance check-in/out
-        });
-    </script>
 </body>
 
 </html>

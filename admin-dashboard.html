@@ -2,75 +2,22 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Admin Dashboard — Dayflow</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="bg-gray-50">
     <main class="max-w-7xl mx-auto p-6">
         <header class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold">Admin / HR Dashboard</h1>
-            <div class="flex items-center gap-3">
-                <label class="text-sm">View as:</label>
-                <select id="impersonate" class="rounded border px-2 py-1">
-                    <option value="">-- Select employee --</option>
-                    <option value="emp001">EMP001 - Alice</option>
-                    <option value="emp002">EMP002 - Bob</option>
-                </select>
-                <button onclick="location.href='/auth/signin.html'" class="text-sm text-indigo-600">Logout</button>
-            </div>
+            <h1 class="text-2xl font-bold">Admin / HR Dashboard</h1><a href="/auth/signin.html"
+                class="text-sm text-emerald-700">Sign out</a>
         </header>
-
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div class="lg:col-span-2 p-4 bg-white rounded shadow">
-                <h2 class="font-semibold mb-3">Employee list</h2>
-                <table class="w-full text-sm">
-                    <thead class="text-slate-600 text-left">
-                        <tr>
-                            <th>Employee</th>
-                            <th>Role</th>
-                            <th>Email</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-t">
-                            <td>Alice</td>
-                            <td>Employee</td>
-                            <td>alice@dayflow.com</td>
-                            <td><span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-xs">Active</span>
-                            </td>
-                        </tr>
-                        <tr class="border-t">
-                            <td>Bob</td>
-                            <td>HR</td>
-                            <td>bob@dayflow.com</td>
-                            <td><span class="px-2 py-1 rounded bg-amber-100 text-amber-700 text-xs">Pending</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="p-4 bg-white rounded shadow">
-                <h2 class="font-semibold mb-3">Attendance summary</h2>
-                <div class="text-sm text-slate-600">Today: 23 Present • 2 Absent</div>
-
-                <h3 class="mt-4 font-medium">Pending leave approvals</h3>
-                <div class="mt-2 space-y-2">
-                    <div class="p-2 border rounded flex items-center justify-between">
-                        <div>
-                            <div class="font-medium">Charlie</div>
-                            <div class="text-xs text-slate-500">Sick leave 2026-08-25</div>
-                        </div>
-                        <div><button class="px-3 py-1 bg-emerald-600 text-white rounded">Approve</button> <button
-                                class="px-3 py-1 border rounded">Reject</button></div>
-                    </div>
-                </div>
-            </div>
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 p-4 bg-white rounded shadow">Employee list</div>
+            <div class="p-4 bg-white rounded shadow">Approvals</div>
         </section>
-
     </main>
 </body>
 
