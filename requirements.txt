@@ -1,0 +1,6 @@
+supabase
+PyJWT
+python-dotenv
+psycopg2-binary
+requests
+gunicorn
