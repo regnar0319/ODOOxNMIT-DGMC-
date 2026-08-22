@@ -211,11 +211,32 @@ PAGE = r'''<!doctype html>
 			else if (!email.validity.valid) { setMessage('email-message', 'Please enter a valid email.'); setInvalid('email-field', true); valid = false; }
 			if (!password.value) { setMessage('password-message', 'Please enter your password.'); setInvalid('password-field', true); valid = false; }
 			if (!valid) return;
-			submit.disabled = true; submit.textContent = 'Signing In...';
+			session = ck.get('session', '')
+			if not session:
+				return None
+			if supabase and not session.endswith('@dayflow.com'):
+				try:
+					user_response = supabase.auth.get_user(session)
+					user = getattr(user_response, 'user', None)
+					email = getattr(user, 'email', None)
+					if email:
+						metadata = getattr(user, 'app_metadata', {}) or {}
+						role = metadata.get('role', 'employee')
+						USERS.setdefault(email.lower(), {'role': role, 'active': True})
+						if role == 'employee':
+							EMPLOYEES.setdefault(email.lower(), {
+								'profile': {'name': email.split('@')[0], 'email': email.lower(), 'phone': '', 'address': '', 'job_title': '', 'department': ''},
+								'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None},
+							})
+						return email.lower()
+				except Exception:
+					return None
+			return session
 			try {
 				const response = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: email.value.trim(), password: password.value}) });
 				const result = await response.json();
 				if (!response.ok) setMessage('form-message', result.error || 'Invalid email or password.');
+				if (!response.ok) setMessage('form-message', result.error || result.detail || 'Invalid email or password.');
 				else window.location.href = result.redirect;
 			} catch (_) { setMessage('form-message', 'Unable to sign in right now. Please try again.'); }
 			finally { submit.disabled = false; submit.textContent = 'Sign In'; }
@@ -241,13 +262,33 @@ async def api_login(request: Request, response: Response):
 		password = str(body.get('password', ''))
 	except Exception:
 		raise HTTPException(status_code=400, detail='Invalid request')
-	user = USERS.get(email)
-	if not user or user.get('password') != password:
-		raise HTTPException(status_code=401, detail='Invalid email or password')
-	redirect = '/employee-dashboard' if user.get('role') == 'employee' else '/admin-dashboard'
-	# set cookie
-	response.set_cookie(key='session', value=email, path='/', httponly=True)
-	return JSONResponse({'redirect': redirect})
+	if not email or not password:
+		raise HTTPException(status_code=400, detail='Email and password are required')
+
+	if supabase:
+		try:
+			auth_response = supabase.auth.sign_in_with_password({'email': email, 'password': password})
+			session = getattr(auth_response, 'session', None)
+			user = getattr(auth_response, 'user', None)
+			access_token = getattr(session, 'access_token', None)
+			if not user or not access_token:
+				raise ValueError('Supabase did not return a session')
+			metadata = getattr(user, 'app_metadata', {}) or {}
+			role = metadata.get('role', 'employee')
+			email = (getattr(user, 'email', email) or email).lower()
+		except Exception:
+			raise HTTPException(status_code=401, detail='Invalid email or password')
+	else:
+		user = USERS.get(email)
+		if not user or user.get('password') != password or user.get('active') is False:
+			raise HTTPException(status_code=401, detail='Invalid email or password')
+		role = user.get('role', 'employee')
+		access_token = email
+
+	redirect = '/employee-dashboard' if role == 'employee' else '/admin-dashboard'
+	result = JSONResponse({'redirect': redirect})
+	result.set_cookie(key='session', value=access_token, path='/', httponly=True, samesite='lax', secure=bool(SUPABASE_URL))
+	return result
 
 
 @app.get('/admin-spa')
@@ -865,6 +906,6 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 
 
 if __name__ == "__main__":
-		print(f"Dayflow sign-in running at http://{HOST}:{PORT}")
-		HTTPServer((HOST, PORT), DayflowHandler).serve_forever()
+	import uvicorn
+	uvicorn.run(app, host=HOST, port=PORT)
 
