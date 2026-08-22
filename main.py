@@ -30,8 +30,10 @@ def get_supabase():
 # Provide an ASGI app so Render/uvicorn can import `main:app`.
 from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse
+from auth_router import router as auth_router
 
 app = FastAPI()
+app.include_router(auth_router)
 
 
 def _parse_cookies_from_header(cookie_header: str):
@@ -42,6 +44,29 @@ def _parse_cookies_from_header(cookie_header: str):
 	return {k: v.value for k, v in c.items()}
 
 
+def _normalize_role(role):
+	value = str(role or '').strip().lower().replace('_', ' ').replace('-', ' ')
+	if value in {'admin', 'hr', 'admin / hr officer', 'admin/hr officer', 'hr officer', 'administrator'}:
+		return 'hr'
+	return 'employee'
+
+
+def _register_authenticated_user(user):
+	email = (getattr(user, 'email', None) or '').strip().lower()
+	if not email:
+		return None, 'employee'
+	metadata = getattr(user, 'app_metadata', {}) or {}
+	user_metadata = getattr(user, 'user_metadata', {}) or {}
+	role = _normalize_role(metadata.get('role') or metadata.get('user_role') or user_metadata.get('role'))
+	USERS[email] = {'role': role, 'active': True}
+	if role == 'employee':
+		EMPLOYEES.setdefault(email, {
+			'profile': {'name': user_metadata.get('name') or email.split('@')[0], 'email': email, 'phone': user_metadata.get('phone', ''), 'address': '', 'job_title': '', 'department': user_metadata.get('company', '')},
+			'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None},
+		})
+	return email, role
+
+
 def _current_user_email_from_request(request: Request):
 	ck = _parse_cookies_from_header(request.headers.get('cookie', ''))
 	session = ck.get('session', '')
@@ -49,17 +74,9 @@ def _current_user_email_from_request(request: Request):
 		try:
 			user_response = supabase.auth.get_user(session)
 			user = getattr(user_response, 'user', None)
-			email = getattr(user, 'email', None)
+			email, _ = _register_authenticated_user(user)
 			if email:
-				metadata = getattr(user, 'app_metadata', {}) or {}
-				role = metadata.get('role', 'employee')
-				USERS.setdefault(email.lower(), {'role': role, 'active': True})
-				if role == 'employee':
-					EMPLOYEES.setdefault(email.lower(), {
-						'profile': {'name': email.split('@')[0], 'email': email.lower(), 'phone': '', 'address': '', 'job_title': '', 'department': ''},
-						'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None},
-					})
-				return email.lower()
+				return email
 		except Exception:
 			return None
 	if session:
@@ -285,9 +302,7 @@ async def api_login(request: Request, response: Response):
 			access_token = getattr(session, 'access_token', None)
 			if not user or not access_token:
 				raise ValueError('Supabase did not return a session')
-			metadata = getattr(user, 'app_metadata', {}) or {}
-			role = metadata.get('role', 'employee')
-			email = (getattr(user, 'email', email) or email).lower()
+			email, role = _register_authenticated_user(user)
 		except Exception:
 			raise HTTPException(status_code=401, detail='Invalid email or password')
 	else:
