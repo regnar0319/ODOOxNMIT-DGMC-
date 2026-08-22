@@ -55,6 +55,19 @@ function updatePasswordMeter() {
 }
 form.elements.password?.addEventListener('input', updatePasswordMeter);
 
+function validatePasswordMatch() {
+    if (pageType !== 'signup') return true;
+    const password = form.elements.password.value;
+    const confirmation = form.elements.confirm_password.value;
+    const message = confirmation && confirmation !== password ? "Passwords don't match." : '';
+    setFieldError('confirm_password', message);
+    form.elements.confirm_password.setCustomValidity(message);
+    return !message;
+}
+
+form.elements.password?.addEventListener('input', validatePasswordMatch);
+form.elements.confirm_password?.addEventListener('input', validatePasswordMatch);
+
 function validateSignIn() {
     let valid = true;
     clearStatus();
@@ -74,7 +87,7 @@ function validateSignUp() {
     if (!form.elements.employee_id.value.trim()) { setFieldError('employee_id', 'Employee ID is required.'); valid = false; } else setFieldError('employee_id');
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setFieldError('email', 'Enter a valid work email.'); valid = false; } else setFieldError('email');
     if (!checks.test(password)) { setFieldError('password', "Password doesn't meet the security requirements."); valid = false; } else setFieldError('password');
-    if (form.elements.confirm_password.value !== password) { setFieldError('confirm_password', "Passwords don't match."); valid = false; } else setFieldError('confirm_password');
+    if (!validatePasswordMatch()) valid = false;
     if (!form.elements.terms.checked) { setStatus('Please accept the Terms & Conditions to continue.'); valid = false; }
     return valid;
 }

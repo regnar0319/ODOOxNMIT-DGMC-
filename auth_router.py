@@ -12,7 +12,7 @@ load_dotenv(".env.local")
 
 
 class SignupRequest(BaseModel):
-	employee_id: str = Field(min_length=1, max_length=50)
+	user_id: str = Field(min_length=1, max_length=50)
 	email: EmailStr
 	password: str = Field(min_length=8, max_length=128)
 	role: Literal["Employee", "Admin", "HR"]
@@ -75,14 +75,14 @@ def signup(payload: SignupRequest, supabase: Client = Depends(get_supabase)) -> 
 		auth_response = supabase.auth.sign_up({
 			"email": email,
 			"password": payload.password,
-			"options": {"data": {"employee_id": payload.employee_id, "role": role, "name": payload.name, "company": payload.company, "phone": payload.phone}},
+			"options": {"data": {"user_id": payload.user_id, "role": role, "name": payload.name, "company": payload.company, "phone": payload.phone}},
 		})
 		user = _response_value(auth_response, "user")
 		if not user:
 			raise ValueError("Supabase did not return a user")
 
 		profile = {
-			"employee_id": payload.employee_id,
+			"employee_id": payload.user_id,
 			"email": email,
 			"role": role,
 			"full_name": payload.name,
