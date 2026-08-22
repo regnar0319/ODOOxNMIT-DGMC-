@@ -1,0 +1,323 @@
+.directory-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 18px;
+    border-bottom: 1px solid var(--line)
+}
+
+.directory-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 270px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff
+}
+
+.directory-search span {
+    color: var(--muted)
+}
+
+.directory-search input {
+    width: 100%;
+    padding: 11px 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-size: .76rem
+}
+
+.directory-toolbar select {
+    min-width: 140px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    background: #fff;
+    font-size: .72rem
+}
+
+.directory-toolbar select:focus,
+.directory-search:focus-within {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(31, 96, 70, .1)
+}
+
+.view-switch {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f6f9f6
+}
+
+.view-switch button {
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 6px;
+    color: var(--muted);
+    background: transparent;
+    font-size: .68rem;
+    font-weight: 800;
+    cursor: pointer
+}
+
+.view-switch button.active {
+    color: var(--deep);
+    background: #fff;
+    box-shadow: 0 2px 7px rgba(18, 60, 45, .08)
+}
+
+.directory-card {
+    overflow: hidden
+}
+
+.bulk-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 18px;
+    color: var(--green);
+    background: #f1faf4;
+    border-bottom: 1px solid #dceee2;
+    font-size: .74rem;
+    font-weight: 800
+}
+
+.bulk-actions {
+    display: flex;
+    gap: 7px
+}
+
+.bulk-actions button {
+    padding: 7px 9px;
+    border: 1px solid #ccebd7;
+    border-radius: 7px;
+    color: var(--green);
+    background: #fff;
+    font-size: .68rem;
+    font-weight: 800;
+    cursor: pointer
+}
+
+.directory-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px 18px;
+    color: var(--muted);
+    font-size: .7rem
+}
+
+.pagination {
+    display: flex;
+    gap: 5px
+}
+
+.pagination button {
+    min-width: 29px;
+    height: 29px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--muted);
+    background: #fff;
+    font-size: .68rem;
+    font-weight: 800
+}
+
+.pagination button.active {
+    color: #fff;
+    border-color: var(--green);
+    background: var(--green)
+}
+
+.employee-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    padding: 18px
+}
+
+.employee-profile-card {
+    position: relative;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: #fff;
+    transition: transform .2s ease, box-shadow .2s ease
+}
+
+.employee-profile-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow)
+}
+
+.employee-profile-card .menu-trigger {
+    position: absolute;
+    top: 13px;
+    right: 13px;
+    width: 28px;
+    height: 28px
+}
+
+.card-person {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 16px
+}
+
+.card-person .avatar {
+    width: 42px;
+    height: 42px;
+    font-size: .75rem
+}
+
+.card-person h3 {
+    margin: 0;
+    font-size: .85rem
+}
+
+.card-person p {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: .68rem
+}
+
+.card-meta {
+    display: grid;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line)
+}
+
+.card-meta div {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: .68rem
+}
+
+.card-meta span {
+    color: var(--muted)
+}
+
+.card-meta strong {
+    text-align: right
+}
+
+.card-actions {
+    display: flex;
+    gap: 7px;
+    margin-top: 15px
+}
+
+.card-actions button {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--green);
+    font-size: .68rem;
+    font-weight: 800;
+    cursor: pointer
+}
+
+.row-check {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--green)
+}
+
+.employee-table-name {
+    display: flex;
+    align-items: center;
+    gap: 9px
+}
+
+.employee-table-name .avatar {
+    flex: 0 0 30px
+}
+
+.menu-cell {
+    position: relative
+}
+
+.employee-action-menu {
+    position: absolute;
+    right: 10px;
+    top: 43px;
+    z-index: 4;
+    display: grid;
+    min-width: 170px;
+    gap: 3px;
+    padding: 7px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #fff;
+    box-shadow: var(--shadow)
+}
+
+.employee-action-menu button {
+    text-align: left;
+    padding: 8px;
+    border: 0;
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    font-size: .7rem;
+    font-weight: 700;
+    cursor: pointer
+}
+
+.employee-action-menu button:hover {
+    background: #f1faf4;
+    color: var(--green)
+}
+
+@media(max-width:900px) {
+    .employee-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+}
+
+@media(max-width:650px) {
+    .directory-toolbar {
+        align-items: stretch
+    }
+
+    .directory-toolbar select,
+    .view-switch {
+        flex: 1
+    }
+
+    .directory-footer {
+        align-items: flex-start;
+        flex-direction: column
+    }
+
+    .employee-grid {
+        grid-template-columns: 1fr
+    }
+
+    .bulk-bar {
+        align-items: flex-start;
+        flex-direction: column
+    }
+
+    .bulk-actions {
+        width: 100%
+    }
+
+    .bulk-actions button {
+        flex: 1
+    }
+}

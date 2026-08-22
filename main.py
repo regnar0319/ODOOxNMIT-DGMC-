@@ -346,16 +346,28 @@ PAGE = r'''<!doctype html>
 
 @app.get('/', response_class=HTMLResponse)
 async def get_root(request: Request):
+	if os.path.isfile('auth/signin.html'):
+		return FileResponse('auth/signin.html', media_type='text/html')
 	return HTMLResponse(content=PAGE)
+
+
+@app.get('/signin')
+@app.get('/signin.html')
+async def get_signin_alias(request: Request):
+	if os.path.isfile('auth/signin.html'):
+		return FileResponse('auth/signin.html', media_type='text/html')
+	raise HTTPException(status_code=404)
 
 
 @app.get('/signup')
 async def get_signup(request: Request):
-	# Signup page removed; redirect to sign-in root which contains the sign-up flow link
+	if os.path.isfile('auth/signup.html'):
+		return FileResponse('auth/signup.html', media_type='text/html')
 	from fastapi.responses import RedirectResponse
 	return RedirectResponse(url='/')
 
 
+<<<<<<< HEAD
 @app.get('/auth/signup.html', response_class=HTMLResponse)
 async def get_auth_signup(request: Request):
 	if os.path.isfile('auth/signup.html'):
@@ -365,11 +377,53 @@ async def get_auth_signup(request: Request):
 
 @app.get('/auth/signin.html', response_class=HTMLResponse)
 async def get_auth_signin(request: Request):
+=======
+@app.get('/auth.css')
+async def get_auth_css():
+	if os.path.isfile('auth/auth.css'):
+		return FileResponse('auth/auth.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/auth.js')
+async def get_auth_js():
+	if os.path.isfile('auth/auth.js'):
+		return FileResponse('auth/auth.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/auth/signin.html')
+async def get_signin_page():
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
 	if os.path.isfile('auth/signin.html'):
 		return FileResponse('auth/signin.html', media_type='text/html')
 	raise HTTPException(status_code=404)
 
 
+<<<<<<< HEAD
+=======
+@app.get('/auth/signup.html')
+async def get_signup_page():
+	if os.path.isfile('auth/signup.html'):
+		return FileResponse('auth/signup.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/auth/auth.css')
+async def get_auth_stylesheet():
+	if os.path.isfile('auth/auth.css'):
+		return FileResponse('auth/auth.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/auth/auth.js')
+async def get_auth_script():
+	if os.path.isfile('auth/auth.js'):
+		return FileResponse('auth/auth.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
 @app.post('/api/login')
 async def api_login(request: Request, response: Response):
 	try:
@@ -412,11 +466,50 @@ async def api_login(request: Request, response: Response):
 	return result
 
 
+<<<<<<< HEAD
 @app.post('/api/logout')
 async def api_logout(request: Request):
 	result = JSONResponse({'message': 'Signed out'})
 	result.delete_cookie(key='session', path='/')
 	return result
+=======
+@app.post('/api/signup')
+async def api_signup(request: Request):
+	try:
+		body = await request.json()
+		employee_id = str(body.get('employee_id', '')).strip()
+		company = str(body.get('company', '')).strip()
+		name = str(body.get('name', '')).strip() or employee_id
+		email = str(body.get('email', '')).strip().lower()
+		requested_role = str(body.get('role', 'Employee')).strip().lower()
+		phone = str(body.get('phone', '')).strip()
+		password = str(body.get('password', ''))
+		confirm_password = str(body.get('confirm_password', ''))
+	except Exception:
+		raise HTTPException(status_code=400, detail='Invalid request')
+	if not employee_id or not email or not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', email):
+		raise HTTPException(status_code=400, detail='Please complete all required fields')
+	if requested_role not in {'employee', 'hr', 'admin'}:
+		raise HTTPException(status_code=400, detail='Invalid account type')
+	role = 'hr' if requested_role in {'hr', 'admin'} else 'employee'
+	if phone and not re.fullmatch(r'\+?[0-9()\-\s]{7,20}', phone):
+		raise HTTPException(status_code=400, detail='Please enter a valid phone number')
+	if not re.fullmatch(r'(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}', password):
+		raise HTTPException(status_code=400, detail='Password must contain at least 8 characters, an uppercase letter, a lowercase letter, a number, and a special character')
+	if password != confirm_password:
+		raise HTTPException(status_code=400, detail='Passwords do not match.')
+	if supabase:
+		try:
+			supabase.auth.sign_up({'email': email, 'password': password, 'options': {'data': {'employee_id': employee_id, 'name': name, 'company': company, 'phone': phone, 'role': role}, 'email_redirect_to': None}})
+		except Exception:
+			raise HTTPException(status_code=400, detail='Unable to create account. The email may already be registered.')
+		return JSONResponse({'message': 'Account created successfully. Please verify your email to continue.'}, status_code=201)
+	if email in USERS:
+		raise HTTPException(status_code=409, detail='An account with this email already exists')
+	USERS[email] = {'password': password, 'role': role, 'active': True}
+	EMPLOYEES[email] = {'profile': {'name': name, 'email': email, 'phone': phone, 'address': '', 'job_title': '', 'department': company}, 'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None}}
+	return JSONResponse({'message': 'Account created successfully. Please verify your email to continue.'}, status_code=201)
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
 
 
 @app.get('/admin-spa')
@@ -450,6 +543,124 @@ async def get_admin_css():
 async def get_dashboard_css():
 	if os.path.isfile('dashboard.css'):
 		return FileResponse('dashboard.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/dashboard.js')
+async def get_dashboard_js():
+	if os.path.isfile('dashboard.js'):
+		return FileResponse('dashboard.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/profile-page.css')
+async def get_profile_css():
+	if os.path.isfile('profile-page.css'):
+		return FileResponse('profile-page.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/profile-page.js')
+async def get_profile_js():
+	if os.path.isfile('profile-page.js'):
+		return FileResponse('profile-page.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/admin-profile')
+@app.get('/admin-profile.html')
+async def get_admin_profile_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
+		raise HTTPException(status_code=403)
+	if os.path.isfile('admin_profile.html'):
+		return FileResponse('admin_profile.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/admin_profile.css')
+async def get_admin_profile_css():
+	if os.path.isfile('admin_profile.css'):
+		return FileResponse('admin_profile.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/admin_profile.js')
+async def get_admin_profile_js():
+	if os.path.isfile('admin_profile.js'):
+		return FileResponse('admin_profile.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/employees.css')
+async def get_employees_css():
+	if os.path.isfile('employees.css'):
+		return FileResponse('employees.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/employees.js')
+async def get_employees_js():
+	if os.path.isfile('employees.js'):
+		return FileResponse('employees.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/attendance')
+@app.get('/attendance.html')
+async def get_attendance_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
+		raise HTTPException(status_code=403)
+	if os.path.isfile('attendance.html'):
+		return FileResponse('attendance.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/attendance.js')
+async def get_attendance_js():
+	if os.path.isfile('attendance.js'):
+		return FileResponse('attendance.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/timeoff')
+@app.get('/timeoff.html')
+async def get_timeoff_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
+		raise HTTPException(status_code=403)
+	if os.path.isfile('timeoff.html'):
+		return FileResponse('timeoff.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/timeoff.js')
+async def get_timeoff_js():
+	if os.path.isfile('timeoff.js'):
+		return FileResponse('timeoff.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/profile')
+@app.get('/profile.html')
+async def get_profile_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in EMPLOYEES:
+		raise HTTPException(status_code=403)
+	if os.path.isfile('profile.html'):
+		return FileResponse('profile.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/employees')
+@app.get('/employees.html')
+async def get_employees_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
+		raise HTTPException(status_code=403)
+	if os.path.isfile('employees.html'):
+		return FileResponse('employees.html', media_type='text/html')
 	raise HTTPException(status_code=404)
 
 
@@ -562,6 +773,7 @@ async def api_profile_update(request: Request):
 		body = await request.json()
 	except Exception:
 		raise HTTPException(status_code=400, detail='Invalid request')
+<<<<<<< HEAD
 	updates = {key: str(body[key]).strip() for key in ('phone', 'address') if key in body}
 	if supabase:
 		user, token = _supabase_user_for_request(request)
@@ -579,6 +791,13 @@ async def api_profile_update(request: Request):
 	else:
 		EMPLOYEES[email]['profile'].update(updates)
 	return JSONResponse(EMPLOYEES[email]['profile'])
+=======
+	profile = EMPLOYEES[email]['profile']
+	for field in ('phone', 'address'):
+		if field in body:
+			profile[field] = str(body[field]).strip()
+	return JSONResponse(profile)
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
 
 
 @app.get('/api/attendance')

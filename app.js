@@ -72,7 +72,7 @@ function updateHeader(viewKey) {
 function renderProfileView() {
   const displayValue = (value) => value || 'Not provided';
   pageContent.innerHTML = `
-    <section class="profile-summary card profile-hero" aria-label="Profile summary">
+    <section class="profile-summary card" aria-label="Profile summary">
       <div class="summary-main">
         <div class="profile-image-shell">
           <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=500&q=80" alt="${profileData.name}" />
@@ -83,18 +83,27 @@ function renderProfileView() {
         </div>
 
         <div class="summary-meta">
-          <div class="identity-line"><h2 id="profile-name">${profileData.name}</h2><span class="status-badge success">● Active</span></div>
-          <p class="profile-designation">People Operations Lead · ${profileData.department}</p>
+          <div class="identity-line">
+            <h2 id="profile-name">${profileData.name}</h2>
+          </div>
 
           <div class="summary-details">
-            <div class="meta-block"><span>Employee ID</span>
+            <div class="meta-block">
+              <span>Login ID</span>
               <strong id="login-id">${profileData.loginId}</strong>
             </div>
-            <div class="meta-block"><span>Work email</span>
+            <div class="meta-block">
+              <span>Email</span>
               <strong><a href="mailto:${profileData.email}">${profileData.email}</a></strong>
             </div>
+<<<<<<< HEAD
             <div class="meta-block"><span>Mobile</span>
               <strong>${displayValue(profileData.phone)}</strong>
+=======
+            <div class="meta-block">
+              <span>Mobile</span>
+              <strong>${profileData.phone}</strong>
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
             </div>
           </div>
         </div>
@@ -102,23 +111,21 @@ function renderProfileView() {
 
       <div class="summary-side">
         <div class="side-grid">
+          <div class="meta-block"><span>Company</span><strong>${profileData.company}</strong></div>
           <div class="meta-block"><span>Department</span><strong>${profileData.department}</strong></div>
           <div class="meta-block"><span>Manager</span><strong>${profileData.manager}</strong></div>
           <div class="meta-block"><span>Location</span><strong>${profileData.location}</strong></div>
-          <div class="meta-block"><span>Employment status</span><strong class="text-success">Active</strong></div>
         </div>
       </div>
     </section>
 
     <nav class="tab-bar" aria-label="Profile tabs">
-      <button type="button" class="tab active" data-panel="overview-panel">Overview</button>
-      <button type="button" class="tab" data-panel="personal-panel">Personal Info</button>
-      <button type="button" class="tab" data-panel="job-panel">Job Info</button>
+      <button type="button" class="tab active" data-panel="resume-panel">Resume</button>
+      <button type="button" class="tab" data-panel="private-panel">Private Info</button>
       <button type="button" class="tab" data-panel="salary-panel">Salary Info</button>
-      <button type="button" class="tab" data-panel="documents-panel">Documents</button>
     </nav>
 
-    <section class="tab-panel active" id="overview-panel">
+    <section class="tab-panel active" id="resume-panel">
       <div class="resume-grid">
         <div class="resume-column">
           <article class="content-card">
@@ -172,7 +179,7 @@ function renderProfileView() {
       </div>
     </section>
 
-    <section class="tab-panel" id="personal-panel">
+    <section class="tab-panel" id="private-panel">
       <div class="private-card card">
         <div class="card-header single-row">
           <h3>Private Information</h3>
@@ -180,18 +187,28 @@ function renderProfileView() {
         </div>
 
         <div class="private-grid">
+<<<<<<< HEAD
           <div class="private-item"><span>Full name</span><strong>${displayValue(profileData.name)}</strong></div>
           <div class="private-item"><span>Personal email</span><strong>${displayValue(profileData.email)}</strong></div>
           <div class="private-item"><span>Personal phone</span><strong id="private-phone">${displayValue(profileData.phone)}</strong></div>
           <div class="private-item"><span>Address</span><strong id="private-address">Not provided</strong></div>
           <div class="private-item"><span>Emergency contact</span><strong id="private-emergency">Not provided</strong></div>
           <div class="private-item"><span>Personal information</span><strong id="private-notes">Not provided</strong></div>
+=======
+          <div class="private-item"><span>Personal phone</span><strong id="private-phone">${profileData.phone}</strong></div>
+          <div class="private-item"><span>Address</span><strong id="private-address">14 Orchid Avenue, Banjara Hills, Hyderabad</strong></div>
+          <div class="private-item"><span>Emergency contact</span><strong id="private-emergency">Ravi Moore · +91 98450 77111</strong></div>
+          <div class="private-item"><span>Personal information</span><strong id="private-notes">Married, Indian national, residing in Hyderabad.</strong></div>
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
         </div>
       </div>
     </section>
 
+<<<<<<< HEAD
     <section class="tab-panel" id="job-panel"><div class="private-card card"><div class="card-header single-row"><div><h3>Professional Information</h3><p>Employment details managed by your organisation.</p></div><span class="status-badge success">● Active</span></div><div class="private-grid"><div class="private-item"><span>Employee ID</span><strong>${displayValue(profileData.loginId)}</strong></div><div class="private-item"><span>Department</span><strong>${displayValue(profileData.department)}</strong></div><div class="private-item"><span>Designation</span><strong>Not provided</strong></div><div class="private-item"><span>Manager</span><strong>${displayValue(profileData.manager)}</strong></div><div class="private-item"><span>Location</span><strong>${displayValue(profileData.location)}</strong></div><div class="private-item"><span>Joining date</span><strong>Not provided</strong></div><div class="private-item"><span>Employment status</span><strong class="text-success">Active</strong></div></div></div></section>
 
+=======
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
     <section class="tab-panel" id="salary-panel">
       <div class="salary-card card">
         <div class="card-header single-row">
@@ -209,8 +226,11 @@ function renderProfileView() {
         </div>
       </div>
     </section>
+<<<<<<< HEAD
 
     <section class="tab-panel" id="documents-panel"><div class="private-card card"><div class="card-header single-row"><div><h3>Documents</h3><p>Secure files belonging to your employee record.</p></div><span class="status-badge">No documents</span></div><div class="empty-state"><strong>No documents uploaded</strong><p>Upload an employment or identity document when document storage is enabled.</p><button type="button" class="secondary-button" disabled>+ Upload Document</button></div></div></section>
+=======
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
   `;
 
   renderSkills();
@@ -276,12 +296,12 @@ function renderAttendanceView() {
   const today = new Date();
   const todayKey = today.toISOString().slice(0, 10);
   const demoRows = [
-    { name: 'Amelia Moore', id: 'DF-2040', department: 'Human Resources', designation: 'HR Manager', email: 'amelia.moore@dayflow.com', date: todayKey, checkin: '08:52', checkout: '17:34', status: 'Present' },
-    { name: 'Rita Patel', id: 'DF-2012', department: 'Finance', designation: 'Accountant', email: 'rita.patel@dayflow.com', date: todayKey, checkin: '09:10', checkout: '18:02', status: 'Present' },
-    { name: 'Daniel Reed', id: 'DF-2042', department: 'Operations', designation: 'Supervisor', email: 'daniel.reed@dayflow.com', date: todayKey, checkin: '--', checkout: '--', status: 'Absent' },
-    { name: 'Grace Kim', id: 'DF-2031', department: 'Design & Experience', designation: 'Product Designer', email: 'grace.kim@dayflow.com', date: todayKey, checkin: '09:04', checkout: '13:10', status: 'Half-day' },
-    { name: 'Noah Williams', id: 'DF-2056', department: 'Engineering', designation: 'Software Engineer', email: 'noah.williams@dayflow.com', date: todayKey, checkin: '08:41', checkout: null, status: 'Present' },
-    { name: 'Sofia Mensah', id: 'DF-2024', department: 'Marketing', designation: 'Marketing Lead', email: 'sofia.mensah@dayflow.com', date: todayKey, checkin: '--', checkout: '--', status: 'Leave' }
+    { name: 'Amelia Moore', email: 'amelia.moore@dayflow.com', date: todayKey, checkin: '08:52', checkout: '17:34', status: 'Present' },
+    { name: 'Rita Patel', email: 'rita.patel@dayflow.com', date: todayKey, checkin: '09:10', checkout: '18:02', status: 'Present' },
+    { name: 'Daniel Reed', email: 'daniel.reed@dayflow.com', date: todayKey, checkin: '--', checkout: '--', status: 'Absent' },
+    { name: 'Grace Kim', email: 'grace.kim@dayflow.com', date: todayKey, checkin: '09:04', checkout: '13:10', status: 'Half-day' },
+    { name: 'Noah Williams', email: 'noah.williams@dayflow.com', date: todayKey, checkin: '08:41', checkout: null, status: 'Present' },
+    { name: 'Sofia Mensah', email: 'sofia.mensah@dayflow.com', date: todayKey, checkin: '--', checkout: '--', status: 'Leave' }
   ];
   const rows = demoRows;
   const formatDate = (value) => value === todayKey ? `Today, ${today.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
@@ -300,83 +320,51 @@ function renderAttendanceView() {
     const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
     const safePage = Math.min(page, pageCount);
     const visibleRows = filteredRows.slice((safePage - 1) * pageSize, safePage * pageSize);
-    const counts = ['Present', 'Absent', 'Half-day', 'Leave'].map((status) => ({ status, count: filteredRows.filter((row) => row.status === status).length }));
     pageContent.innerHTML = `
       <section class="attendance-page">
-        <div class="attendance-heading"><div><p class="eyebrow">Workforce</p><h2>Attendance</h2><p>Track and manage employee attendance, working hours and daily records.</p></div><button type="button" class="secondary-button" id="export-attendance">↓ &nbsp; Export report</button></div>
-        <div class="attendance-kpis">${counts.map((item) => `<article class="attendance-kpi ${item.status.toLowerCase().replace('-', '')}"><span class="kpi-icon">●</span><div><small>${item.status}</small><strong>${item.count}</strong><em>${filteredRows.length ? `${((item.count / filteredRows.length) * 100).toFixed(1)}% of employees` : 'No records'}</em></div></article>`).join('')}</div>
+        <div class="attendance-heading"><div><p class="eyebrow">People operations</p><h2>Attendance</h2><p>Review attendance, hours, and overtime across your team.</p></div><button type="button" class="primary-button" id="export-attendance">↓ &nbsp; Export report</button></div>
         <section class="card attendance-card">
-          <div class="attendance-toolbar"><div class="attendance-date-nav"><button type="button" id="attendance-prev" aria-label="Previous day">←</button><strong>${today.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</strong><button type="button" id="attendance-next" aria-label="Next day">→</button></div><div class="segmented attendance-view"><button type="button" class="${view === 'daily' ? 'active' : ''}" data-view="daily">Daily</button><button type="button" class="${view === 'weekly' ? 'active' : ''}" data-view="weekly">Weekly</button><button type="button" data-view="monthly">Monthly</button></div></div>
-          <div class="attendance-toolbar attendance-filters"><div class="attendance-search"><span>⌕</span><input id="attendance-search" type="search" placeholder="Search employees by name or ID..." aria-label="Search attendance"></div><select id="attendance-department" aria-label="Filter by department"><option value="All">All departments</option>${[...new Set(rows.map((row) => row.department))].map((department) => `<option>${escape(department)}</option>`).join('')}</select><select id="attendance-status" aria-label="Filter by status"><option value="All">All statuses</option><option>Present</option><option>Absent</option><option>Half-day</option><option>Leave</option></select><input id="attendance-date" type="date" value="${todayKey}" aria-label="Filter by date"><button type="button" class="table-action" id="clear-attendance">Clear filters</button></div>
+          <div class="attendance-toolbar"><div class="attendance-search"><span>⌕</span><input id="attendance-search" type="search" placeholder="Search employee name or email" aria-label="Search attendance"></div><input id="attendance-date" type="date" value="${todayKey}" aria-label="Filter by date"><select id="attendance-status" aria-label="Filter by status"><option value="All">All statuses</option><option>Present</option><option>Absent</option><option>Half-day</option><option>Leave</option></select><div class="segmented attendance-view"><button type="button" class="${view === 'daily' ? 'active' : ''}" data-view="daily">Daily</button><button type="button" class="${view === 'weekly' ? 'active' : ''}" data-view="weekly">Weekly</button></div></div>
           <div class="attendance-summary"><span><b>${filteredRows.length}</b> records</span><span><i class="summary-dot present"></i>${filteredRows.filter((row) => row.status === 'Present').length} present</span><span><i class="summary-dot absent"></i>${filteredRows.filter((row) => row.status === 'Absent').length} absent</span><span><i class="summary-dot leave"></i>${filteredRows.filter((row) => row.status === 'Leave').length} on leave</span></div>
-          <div class="table-wrap"><table class="attendance-table"><thead><tr><th>Employee</th><th>Employee ID</th><th>Department</th><th>Check in</th><th>Check out</th><th>Working hours</th><th>Status</th><th>Actions</th></tr></thead><tbody>${visibleRows.map((row) => { const hours = duration(row); const extra = Math.max(0, hours - 8); return `<tr><td><div class="attendance-employee"><span class="attendance-avatar">${initials(row.name)}</span><span><strong>${escape(row.name)}</strong><small>${escape(row.designation)}</small></span></div></td><td>${escape(row.id)}</td><td>${escape(row.department)}</td><td class="time-cell">${formatTime(row.checkin)}</td><td class="time-cell ${!row.checkout || row.checkout === '--' ? 'active-time' : ''}">${row.checkout ? formatTime(row.checkout) : '—'}</td><td><strong>${hours ? `${hours.toFixed(1)}h` : '--'}</strong>${extra ? `<small class="overtime">+${extra.toFixed(1)}h extra</small>` : ''}</td><td><span class="pill ${statusClass(row.status)}">${escape(row.status)}</span></td><td><button type="button" class="row-menu" data-attendance-index="${rows.indexOf(row)}" aria-label="Attendance actions">⋯</button></td></tr>`; }).join('') || '<tr><td class="empty" colspan="8"><strong>No attendance records found</strong><small>There are no attendance records matching your current filters.</small></td></tr>'}</tbody></table></div>
-          <div class="attendance-analytics"><section><div class="panel-header"><h3>Attendance overview</h3><div class="segmented"><button class="active">Week</button><button>Month</button></div></div><div class="attendance-chart">${[48,68,54,82,62,76,58].map((height, index) => `<span style="height:${height}%" title="${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][index]}"></span>`).join('')}</div><div class="chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></section><section><div class="panel-header"><h3>Attendance distribution</h3></div><div class="distribution-list">${counts.map((item) => `<div><span><i class="distribution-dot ${statusClass(item.status)}"></i>${item.status}</span><strong>${item.count}</strong></div>`).join('')}</div></section></div>
+          <div class="table-wrap"><table class="attendance-table"><thead><tr><th>Date</th><th>Employee</th><th>Check-in</th><th>Check-out</th><th>Working time</th><th>Extra time</th><th>Status</th></tr></thead><tbody>${visibleRows.map((row) => { const hours = duration(row); const extra = Math.max(0, hours - 8); return `<tr><td><strong>${formatDate(row.date)}</strong></td><td><div class="attendance-employee"><span class="attendance-avatar">${initials(row.name)}</span><span><strong>${escape(row.name)}</strong><small>${escape(row.email)}</small></span></div></td><td class="time-cell">${formatTime(row.checkin)}</td><td class="time-cell ${!row.checkout || row.checkout === '--' ? 'active-time' : ''}">${row.checkout ? formatTime(row.checkout) : 'Active'}</td><td><strong>${hours ? `${hours.toFixed(1)}h` : '--'}</strong></td><td>${extra ? `<strong class="overtime">+${extra.toFixed(1)}h</strong>` : '<span class="muted-cell">--</span>'}</td><td><span class="pill ${statusClass(row.status)}">${escape(row.status)}</span></td></tr>`; }).join('') || '<tr><td class="empty" colspan="7">No attendance records match these filters.</td></tr>'}</tbody></table></div>
           <div class="attendance-footer"><span>Showing ${visibleRows.length ? (safePage - 1) * pageSize + 1 : 0}–${Math.min(safePage * pageSize, filteredRows.length)} of ${filteredRows.length}</span><div class="pagination"><button type="button" id="previous-page" ${safePage === 1 ? 'disabled' : ''}>←</button><span>Page ${safePage} of ${pageCount}</span><button type="button" id="next-page" ${safePage === pageCount ? 'disabled' : ''}>→</button></div></div>
         </section>
-        <aside class="attendance-drawer" id="attendance-drawer" aria-hidden="true"><button type="button" class="drawer-close" id="close-attendance-drawer" aria-label="Close attendance details">×</button><p class="eyebrow">Attendance details</p><div id="attendance-drawer-content"></div></aside>
       </section>`;
     const search = document.getElementById('attendance-search');
     const date = document.getElementById('attendance-date');
     const status = document.getElementById('attendance-status');
-    const department = document.getElementById('attendance-department');
     const applyFilters = () => {
       const query = search.value.toLowerCase();
       const selectedDate = date.value;
       const selectedStatus = status.value;
-      const selectedDepartment = department.value;
-      const filtered = rows.filter((row) => (view === 'weekly' || !selectedDate || row.date === selectedDate) && (selectedStatus === 'All' || row.status === selectedStatus) && (selectedDepartment === 'All' || row.department === selectedDepartment) && `${row.name} ${row.id} ${row.email}`.toLowerCase().includes(query));
+      const filtered = rows.filter((row) => (view === 'weekly' || !selectedDate || row.date === selectedDate) && (selectedStatus === 'All' || row.status === selectedStatus) && `${row.name} ${row.email}`.toLowerCase().includes(query));
       render(filtered, 1, view);
     };
-    search.addEventListener('input', applyFilters); date.addEventListener('change', applyFilters); status.addEventListener('change', applyFilters); department.addEventListener('change', applyFilters);
-    document.getElementById('clear-attendance').addEventListener('click', () => render(rows, 1, view));
+    search.addEventListener('input', applyFilters); date.addEventListener('change', applyFilters); status.addEventListener('change', applyFilters);
     document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => render(rows, 1, button.dataset.view)));
     document.getElementById('previous-page').addEventListener('click', () => render(filteredRows, safePage - 1, view));
     document.getElementById('next-page').addEventListener('click', () => render(filteredRows, safePage + 1, view));
-    document.getElementById('export-attendance').addEventListener('click', () => {
-      const csv = ['Employee,Employee ID,Department,Check In,Check Out,Working Hours,Status', ...filteredRows.map((row) => {
-        const worked = duration(row);
-        return [row.name, row.id, row.department, row.checkin, row.checkout || '--', `${worked.toFixed(1)}h`, row.status].map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',');
-      })].join('\n');
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-      link.download = `dayflow-attendance-${todayKey}.csv`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-      showToast('Attendance report downloaded.');
-    });
-    document.getElementById('attendance-prev').addEventListener('click', () => showToast('Previous day selected.'));
-    document.getElementById('attendance-next').addEventListener('click', () => showToast('Next day selected.'));
-    document.querySelectorAll('.row-menu').forEach((button) => button.addEventListener('click', () => { const row = rows[Number(button.dataset.attendanceIndex)]; document.getElementById('attendance-drawer-content').innerHTML = `<div class="drawer-person"><span class="attendance-avatar">${initials(row.name)}</span><div><h3>${escape(row.name)}</h3><p>${escape(row.id)} · ${escape(row.department)}</p></div></div><dl class="drawer-data"><div><dt>Date</dt><dd>${formatDate(row.date)}</dd></div><div><dt>Check in</dt><dd>${formatTime(row.checkin)}</dd></div><div><dt>Check out</dt><dd>${row.checkout ? formatTime(row.checkout) : 'Active'}</dd></div><div><dt>Working hours</dt><dd>${duration(row).toFixed(1)}h</dd></div><div><dt>Status</dt><dd><span class="pill ${statusClass(row.status)}">${escape(row.status)}</span></dd></div></dl><button type="button" class="primary-button drawer-history">View full attendance history</button>`; const drawer = document.getElementById('attendance-drawer'); drawer.classList.add('open'); drawer.setAttribute('aria-hidden', 'false'); }));
-    document.getElementById('close-attendance-drawer').addEventListener('click', () => { const drawer = document.getElementById('attendance-drawer'); drawer.classList.remove('open'); drawer.setAttribute('aria-hidden', 'true'); });
+    document.getElementById('export-attendance').addEventListener('click', () => showToast('Attendance report export started.'));
   };
   render(rows);
 }
 
 function renderTimeOffView() {
-  pageContent.innerHTML = `
-    <div class="two-col-grid">
-      <section class="card panel-card">
-        <div class="panel-header">
-          <h3>Leave Balance</h3>
-          <button type="button" class="primary-button">Apply Leave</button>
-        </div>
-        <div class="mini-stats">
-          <div><span>Paid</span><strong>14 Days</strong></div>
-          <div><span>Sick</span><strong>7 Days</strong></div>
-          <div><span>Unpaid</span><strong>3 Days</strong></div>
-        </div>
-      </section>
-
-      <section class="card panel-card">
-        <div class="panel-header"><h3>Requests</h3></div>
-        <ul class="list-stack">
-          <li><span>Annual Leave</span><strong>14 Aug</strong><em class="pending">Pending</em></li>
-          <li><span>Sick Leave</span><strong>09 Aug</strong><em class="approved">Approved</em></li>
-          <li><span>Personal Leave</span><strong>02 Aug</strong><em class="rejected">Rejected</em></li>
-        </ul>
-      </section>
-    </div>
-  `;
+  const requests = [
+    { employee: 'Amara Mensah', id: 'DF-2040', department: 'Design & Experience', type: 'Paid', from: '18 Sep 2026', to: '20 Sep 2026', duration: '3 days', requested: '22 Aug 2026', status: 'Pending', remarks: 'Family commitment' },
+    { employee: 'Rita Patel', id: 'DF-2012', department: 'Finance', type: 'Sick', from: '28 Aug 2026', to: '28 Aug 2026', duration: '1 day', requested: '21 Aug 2026', status: 'Approved', remarks: 'Medical appointment' },
+    { employee: 'Daniel Reed', id: 'DF-2042', department: 'Operations', type: 'Paid', from: '02 Sep 2026', to: '04 Sep 2026', duration: '3 days', requested: '20 Aug 2026', status: 'Rejected', remarks: 'Team coverage required' },
+    { employee: 'Grace Kim', id: 'DF-2048', department: 'Engineering', type: 'Unpaid', from: '12 Sep 2026', to: '13 Sep 2026', duration: '2 days', requested: '19 Aug 2026', status: 'Pending', remarks: 'Personal leave' }
+  ];
+  const statusClass = (value) => value.toLowerCase();
+  const render = (list) => { pageContent.innerHTML = `<section class="timeoff-page"><div class="timeoff-heading"><div><p class="eyebrow">Workforce</p><h2>Time Off</h2><p>Manage leave requests, time-off records and approvals.</p></div><button type="button" class="primary-button" id="apply-leave">+ Apply for leave</button></div><div class="timeoff-summary"><article class="card"><span>◷</span><strong>8</strong><small>Pending requests</small></article><article class="card"><span>✓</span><strong>42</strong><small>Approved</small></article><article class="card"><span>×</span><strong>6</strong><small>Rejected</small></article><article class="card"><span>●</span><strong>14</strong><small>On leave today</small></article></div><section class="card timeoff-card"><div class="timeoff-toolbar"><div class="timeoff-search">⌕ <input id="leave-search" placeholder="Search employee or request..." aria-label="Search time off"></div><select id="leave-type" aria-label="Filter by leave type"><option value="All">Leave type</option><option>Paid</option><option>Sick</option><option>Unpaid</option></select><select id="leave-status" aria-label="Filter by status"><option value="All">Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select><select id="leave-department" aria-label="Filter by department"><option value="All">Department</option><option>Design & Experience</option><option>Finance</option><option>Operations</option><option>Engineering</option></select><button id="clear-leave-filters" class="clear-filters hidden" type="button">Clear filters</button></div><div class="table-wrap"><table class="timeoff-table"><thead><tr><th>Employee</th><th>Leave type</th><th>Date range</th><th>Duration</th><th>Request date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((request) => `<tr data-request-id="${request.id}"><td><div class="employee-cell"><span class="employee-avatar">${request.employee.split(' ').map((part) => part[0]).join('')}</span><span><strong>${request.employee}</strong><small>${request.id} · ${request.department}</small></span></div></td><td>${request.type}</td><td>${request.from} – ${request.to}</td><td>${request.duration}</td><td>${request.requested}</td><td><span class="leave-status ${statusClass(request.status)}">● ${request.status}</span></td><td><button class="leave-view" type="button" aria-label="View ${request.employee} leave request">View</button>${request.status === 'Pending' ? `<button class="leave-approve" type="button">Approve</button><button class="leave-reject" type="button">Reject</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="empty-state">No leave requests found<br><small>Try adjusting your search or filters.</small></td></tr>'}</tbody></table></div><div class="attendance-footer"><span>Showing ${list.length} of ${list.length} requests</span><span>Admin / HR review workspace</span></div></section><div class="leave-modal" id="leave-modal"><form class="leave-form" id="leave-form"><div class="panel-header"><div><p class="eyebrow">Time off</p><h3>Apply for leave</h3></div><button type="button" class="drawer-close" data-close-leave aria-label="Close leave form">×</button></div><div class="employee-form-grid"><label>Leave type<select name="type"><option>Paid</option><option>Sick</option><option>Unpaid</option></select></label><label>Start date<input name="from" type="date" required></label><label>End date<input name="to" type="date" required></label><label class="wide">Remarks<textarea name="remarks" placeholder="Add a note for HR"></textarea></label></div><div class="modal-actions"><button type="button" class="secondary-button" data-close-leave>Cancel</button><button type="submit" class="primary-button">Submit request</button></div></form></div></section>`;
+    const query = document.getElementById('leave-search'); const type = document.getElementById('leave-type'); const status = document.getElementById('leave-status'); const department = document.getElementById('leave-department');
+    const filter = () => { const filtered = requests.filter((request) => `${request.employee} ${request.id} ${request.type}`.toLowerCase().includes(query.value.toLowerCase()) && (type.value === 'All' || request.type === type.value) && (status.value === 'All' || request.status === status.value) && (department.value === 'All' || request.department === department.value)); document.getElementById('clear-leave-filters').classList.toggle('hidden', !query.value && type.value === 'All' && status.value === 'All' && department.value === 'All'); render(filtered); };
+    query.addEventListener('input', filter); type.addEventListener('change', filter); status.addEventListener('change', filter); department.addEventListener('change', filter); document.getElementById('clear-leave-filters').onclick = () => { query.value = ''; type.value = status.value = department.value = 'All'; filter(); };
+    document.getElementById('apply-leave').onclick = () => document.getElementById('leave-modal').classList.add('open'); document.querySelectorAll('[data-close-leave]').forEach((button) => button.onclick = () => document.getElementById('leave-modal').classList.remove('open')); document.getElementById('leave-form').onsubmit = (event) => { event.preventDefault(); document.getElementById('leave-modal').classList.remove('open'); showToast('Leave request submitted successfully.'); };
+    document.querySelectorAll('.leave-view').forEach((button) => button.onclick = () => showToast('Leave request details opened.')); document.querySelectorAll('.leave-approve').forEach((button) => button.onclick = () => { button.closest('tr').querySelector('.leave-status').textContent = '● Approved'; button.closest('tr').querySelector('.leave-status').className = 'leave-status approved'; showToast('Leave request approved.'); }); document.querySelectorAll('.leave-reject').forEach((button) => button.onclick = () => { button.closest('tr').querySelector('.leave-status').textContent = '● Rejected'; button.closest('tr').querySelector('.leave-status').className = 'leave-status rejected'; showToast('Leave request rejected.'); });
+  };
+  render(requests);
 }
 
 function renderPayrollView() {
@@ -545,10 +533,10 @@ function syncProfileFields(formData) {
 
   const sideMeta = document.querySelectorAll('.summary-side .meta-block strong');
   if (sideMeta.length >= 4) {
-    sideMeta[0].textContent = profileData.department;
-    sideMeta[1].textContent = profileData.manager;
-    sideMeta[2].textContent = profileData.location;
-    sideMeta[3].textContent = 'Active';
+    sideMeta[0].textContent = profileData.company;
+    sideMeta[1].textContent = profileData.department;
+    sideMeta[2].textContent = profileData.manager;
+    sideMeta[3].textContent = profileData.location;
   }
 }
 
