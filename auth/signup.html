@@ -24,7 +24,7 @@
 </head>
 
 <body class="antialiased bg-gradient-to-b from-slate-50 to-white text-slate-800">
-    <div class="min-h-screen flex items-center justify-center p-6">
+    <main class="min-h-screen flex items-center justify-center p-6">
         <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <!-- Left panel: branding & CTA -->
             <div class="hidden md:flex flex-col justify-center p-8 rounded-xl brand-accent text-white"
@@ -84,7 +84,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-600">Password</label>
+                        <label for="password" class="block text-sm font-medium text-slate-600">Password</label>
                         <div class="relative mt-1">
                             <input id="password" name="password" type="password" aria-describedby="password-error"
                                 required class="w-full rounded-md border border-slate-200 px-3 py-2 focus-ring"
@@ -95,11 +95,31 @@
                         <div class="mt-2 text-xs text-slate-500">Use at least 8 characters with uppercase, lowercase, a
                             number and a symbol.</div>
 
+                        <!-- Password rules checklist -->
+                        <ul id="pwdRules" class="mt-2 text-xs space-y-1 text-slate-600" aria-live="polite">
+                            <li id="rule-length" class="flex items-center gap-2"><span
+                                    class="w-4 h-4 rounded-full bg-slate-200 text-white flex items-center justify-center text-xs">✕</span>At
+                                least 8 characters</li>
+                            <li id="rule-lower" class="flex items-center gap-2"><span
+                                    class="w-4 h-4 rounded-full bg-slate-200 text-white flex items-center justify-center text-xs">✕</span>Lowercase
+                                letter</li>
+                            <li id="rule-upper" class="flex items-center gap-2"><span
+                                    class="w-4 h-4 rounded-full bg-slate-200 text-white flex items-center justify-center text-xs">✕</span>Uppercase
+                                letter</li>
+                            <li id="rule-number" class="flex items-center gap-2"><span
+                                    class="w-4 h-4 rounded-full bg-slate-200 text-white flex items-center justify-center text-xs">✕</span>Number
+                            </li>
+                            <li id="rule-symbol" class="flex items-center gap-2"><span
+                                    class="w-4 h-4 rounded-full bg-slate-200 text-white flex items-center justify-center text-xs">✕</span>Symbol
+                                (e.g. !@#$%)</li>
+                        </ul>
+
                         <!-- Strength bar -->
-                        <div class="strength-bar mt-2 w-full h-2 bg-slate-100 rounded-full overflow-hidden"
-                            aria-hidden="false" aria-label="Password strength">
-                            <div id="strengthFill" class="h-full bg-red-500 w-0" role="progressbar" aria-valuemin="0"
-                                aria-valuemax="100" aria-valuenow="0"></div>
+                        <div id="strengthBar"
+                            class="strength-bar mt-2 w-full h-2 bg-slate-100 rounded-full overflow-hidden"
+                            role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                            aria-labelledby="strengthLabel">
+                            <div id="strengthFill" class="h-full bg-red-500 w-0"></div>
                         </div>
                         <div id="strengthLabel" class="mt-2 text-xs font-medium text-slate-600">Strength: <span
                                 id="strengthText">Too weak</span></div>
@@ -123,61 +143,108 @@
                         class="text-indigo-600 hover:underline">Sign in</a></p>
             </div>
         </div>
-    </div>
+        </div>
 
-    <script>
-        // Password strength utility
-        const pwd = document.getElementById('password');
-        const fill = document.getElementById('strengthFill');
-        const label = document.getElementById('strengthText');
-        const toggle = document.getElementById('toggle');
-        const signupForm = document.getElementById('signup');
-        const signupBtn = document.getElementById('signupBtn');
-        const spin = document.getElementById('spin');
-        const signupText = document.getElementById('signupText');
-        const msg = document.getElementById('signupMessage');
+        <script>
+            // Password strength utility
+            const pwd = document.getElementById('password');
+            const fill = document.getElementById('strengthFill');
+            const label = document.getElementById('strengthText');
+            const toggle = document.getElementById('toggle');
+            const signupForm = document.getElementById('signup');
+            const signupBtn = document.getElementById('signupBtn');
+            const spin = document.getElementById('spin');
+            const signupText = document.getElementById('signupText');
+            const msg = document.getElementById('signupMessage');
 
-        function scorePassword(s) {
-            let score = 0;
-            if (!s) return 0;
-            // length
-            score += Math.min(10, s.length) * 2;
-            // variety
-            if (/[a-z]/.test(s)) score += 10;
-            if (/[A-Z]/.test(s)) score += 10;
-            if (/[0-9]/.test(s)) score += 10;
-            if (/[^A-Za-z0-9]/.test(s)) score += 10;
-            return Math.min(50, score);
-        }
+            function scorePassword(s) {
+                let score = 0;
+                if (!s) return 0;
+                // length
+                score += Math.min(10, s.length) * 2;
+                // variety
+                if (/[a-z]/.test(s)) score += 10;
+                if (/[A-Z]/.test(s)) score += 10;
+                if (/[0-9]/.test(s)) score += 10;
+                if (/[^A-Za-z0-9]/.test(s)) score += 10;
+                return Math.min(50, score);
+            }
 
-        pwd.addEventListener('input', () => {
-            const sc = scorePassword(pwd.value);
-            const pct = Math.round((sc / 50) * 100);
-            fill.style.width = pct + '%';
-            if (pct < 40) { fill.style.background = '#ef4444'; label.textContent = 'Too weak'; }
-            else if (pct < 70) { fill.style.background = '#f59e0b'; label.textContent = 'Okay'; }
-            else { fill.style.background = '#10b981'; label.textContent = 'Strong'; }
-        });
+            const rules = {
+                length: document.getElementById('rule-length'),
+                lower: document.getElementById('rule-lower'),
+                upper: document.getElementById('rule-upper'),
+                number: document.getElementById('rule-number'),
+                symbol: document.getElementById('rule-symbol')
+            };
+            const strengthBarEl = document.getElementById('strengthBar');
 
-        toggle.addEventListener('click', () => {
-            const showing = pwd.type === 'text';
-            pwd.type = showing ? 'password' : 'text';
-            toggle.textContent = showing ? 'Show' : 'Hide';
-        });
+            function updateRule(el, ok) {
+                const dot = el.querySelector('span');
+                if (ok) { dot.textContent = '✓'; dot.classList.remove('bg-slate-200'); dot.classList.add('bg-emerald-500'); el.classList.add('text-emerald-700'); }
+                else { dot.textContent = '✕'; dot.classList.remove('bg-emerald-500'); dot.classList.add('bg-slate-200'); el.classList.remove('text-emerald-700'); }
+            }
 
-        signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); msg.classList.add('hidden');
-            signupBtn.disabled = true; spin.classList.remove('hidden'); signupText.textContent = 'Creating...';
-            try {
-                await new Promise(r => setTimeout(r, 900));
-                // Replace with real API call to /api/signup
-                msg.classList.remove('hidden'); msg.classList.remove('text-red-600'); msg.classList.add('text-emerald-600'); msg.textContent = 'Account created — check your email to verify.';
-                signupForm.reset(); fill.style.width = '0%'; label.textContent = 'Too weak';
-            } catch (err) {
-                msg.classList.remove('hidden'); msg.classList.add('text-red-600'); msg.textContent = 'Unable to create account. Try again later.';
-            } finally { signupBtn.disabled = false; spin.classList.add('hidden'); signupText.textContent = 'Create account'; }
-        });
-    </script>
+            pwd.addEventListener('input', () => {
+                const v = pwd.value;
+                const okLength = v.length >= 8;
+                const okLower = /[a-z]/.test(v);
+                const okUpper = /[A-Z]/.test(v);
+                const okNumber = /[0-9]/.test(v);
+                const okSymbol = /[^A-Za-z0-9]/.test(v);
+                updateRule(rules.length, okLength);
+                updateRule(rules.lower, okLower);
+                updateRule(rules.upper, okUpper);
+                updateRule(rules.number, okNumber);
+                updateRule(rules.symbol, okSymbol);
+
+                const sc = scorePassword(v);
+                const pct = Math.round((sc / 50) * 100);
+                fill.style.width = pct + '%';
+                if (strengthBarEl) strengthBarEl.setAttribute('aria-valuenow', String(pct));
+                if (pct < 40) { fill.style.background = '#ef4444'; label.textContent = 'Too weak'; }
+                else if (pct < 70) { fill.style.background = '#f59e0b'; label.textContent = 'Okay'; }
+                else { fill.style.background = '#10b981'; label.textContent = 'Strong'; }
+            });
+
+            toggle.addEventListener('click', () => {
+                const showing = pwd.type === 'text';
+                pwd.type = showing ? 'password' : 'text';
+                toggle.textContent = showing ? 'Show' : 'Hide';
+            });
+
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault(); msg.classList.add('hidden');
+                const emailEl = document.getElementById('email');
+                const empEl = document.getElementById('empId');
+                const roleEl = document.getElementById('role');
+                const passwordEl = document.getElementById('password');
+                // Basic client-side validation
+                const emailVal = emailEl.value.trim();
+                const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+                if (!emailOk) { document.getElementById('email-error').textContent = 'Enter a valid email.'; document.getElementById('email-error').classList.remove('hidden'); emailEl.focus(); return; }
+                document.getElementById('email-error').classList.add('hidden');
+
+                // Ensure password rules satisfied
+                const v = passwordEl.value;
+                const ok = v.length >= 8 && /[a-z]/.test(v) && /[A-Z]/.test(v) && /[0-9]/.test(v) && /[^A-Za-z0-9]/.test(v);
+                if (!ok) { document.getElementById('password-error').textContent = 'Password does not meet requirements.'; document.getElementById('password-error').classList.remove('hidden'); passwordEl.focus(); return; }
+                document.getElementById('password-error').classList.add('hidden');
+
+                signupBtn.disabled = true; spin.classList.remove('hidden'); signupText.textContent = 'Creating...';
+                try {
+                    const payload = { employee_id: empEl.value.trim(), email: emailVal, role: roleEl.value, password: v };
+                    const res = await fetch('/api/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!res.ok) {
+                        const txt = await res.text(); throw new Error(txt || 'Unable to create account');
+                    }
+                    msg.classList.remove('hidden'); msg.classList.remove('text-red-600'); msg.classList.add('text-emerald-600'); msg.textContent = 'Account created — check your email to verify.';
+                    signupForm.reset(); fill.style.width = '0%'; label.textContent = 'Too weak';
+                } catch (err) {
+                    msg.classList.remove('hidden'); msg.classList.add('text-red-600'); msg.textContent = err.message || 'Unable to create account. Try again later.';
+                } finally { signupBtn.disabled = false; spin.classList.add('hidden'); signupText.textContent = 'Create account'; }
+            });
+        </script>
 </body>
 
 </html>

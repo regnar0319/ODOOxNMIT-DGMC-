@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Leave Request — Dayflow</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-slate-50 min-h-screen text-slate-800"><main class="max-w-3xl mx-auto p-6">
+<header class="flex items-center justify-between mb-6"><h1 class="text-2xl font-bold">Request Leave</h1><a href="/employee-dashboard.html" class="text-sm">Back</a></header>
+<form id="leaveForm" class="bg-white p-4 rounded shadow space-y-4" onsubmit="return false;">
+  <div><label class="block text-sm font-medium">Leave type</label><select id="leaveType" class="mt-1 w-full rounded border px-3 py-2"><option value="paid">Paid</option><option value="sick">Sick</option><option value="unpaid">Unpaid</option></select></div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label class="block text-sm font-medium">Start date</label><input id="start" type="date" class="mt-1 w-full rounded border px-3 py-2"></div><div><label class="block text-sm font-medium">End date</label><input id="end" type="date" class="mt-1 w-full rounded border px-3 py-2"></div></div>
+  <div><label class="block text-sm font-medium">Reason</label><textarea id="reason" rows="4" class="mt-1 w-full rounded border px-3 py-2"></textarea></div>
+  <div><button id="apply" class="px-4 py-2 rounded bg-indigo-600 text-white">Submit request</button></div>
+  <p id="leaveMsg" class="text-sm text-emerald-600 hidden" role="status" aria-live="polite"></p>
+</form>
+</main>
+<script>
+const form = document.getElementById('leaveForm');
+const msg = document.getElementById('leaveMsg');
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const payload = { type: document.getElementById('leaveType').value, start: document.getElementById('start').value, end: document.getElementById('end').value, reason: document.getElementById('reason').value };
+  // Basic validation
+  if(!payload.start || !payload.end){ alert('Please choose a start and end date'); return; }
+  try{
+    // TODO: POST to /api/leave
+    await new Promise(r=>setTimeout(r,600));
+    msg.classList.remove('hidden'); msg.textContent='Leave request submitted (status: Pending)';
+    form.reset();
+  }catch(err){ alert('Unable to submit leave request'); }
+});
+</script></body></html>
