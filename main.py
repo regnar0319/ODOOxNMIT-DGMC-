@@ -44,11 +44,8 @@ def _parse_cookies_from_header(cookie_header: str):
 
 def _current_user_email_from_request(request: Request):
 	ck = _parse_cookies_from_header(request.headers.get('cookie', ''))
-<<<<<<< HEAD
 	session = ck.get('session', '')
-	if not session:
-		return None
-	if supabase and not session.endswith('@dayflow.com'):
+	if session and supabase and not session.endswith('@dayflow.com'):
 		try:
 			user_response = supabase.auth.get_user(session)
 			user = getattr(user_response, 'user', None)
@@ -65,24 +62,16 @@ def _current_user_email_from_request(request: Request):
 				return email.lower()
 		except Exception:
 			return None
-	return session
-=======
-	# cookie first
-	email = ck.get('session')
-	if email:
-		return email
-	# Authorization: Bearer <email> (convenience for API clients)
+	if session:
+		return session
 	auth = request.headers.get('authorization') or request.headers.get('Authorization')
 	if auth:
 		parts = auth.split()
 		if len(parts) == 2 and parts[0].lower() == 'bearer':
 			return parts[1]
-	# fallback to query param `session` for very simple clients
-	q = request.query_params
-	if 'session' in q:
-		return q.get('session')
+	if 'session' in request.query_params:
+		return request.query_params.get('session')
 	return None
->>>>>>> ae660fc3488f48012d1112f332c262057308d486
 
 
 HOST = "127.0.0.1"
@@ -308,7 +297,7 @@ async def api_login(request: Request, response: Response):
 		role = user.get('role', 'employee')
 		access_token = email
 
-	redirect = '/employee-dashboard' if role == 'employee' else '/admin-dashboard'
+	redirect = '/employee-spa' if role == 'employee' else '/admin-spa'
 	result = JSONResponse({'redirect': redirect, 'session': access_token})
 	result.set_cookie(key='session', value=access_token, path='/', httponly=True, samesite='lax', secure=bool(SUPABASE_URL))
 	return result
@@ -374,6 +363,13 @@ async def get_admin_css():
 	raise HTTPException(status_code=404)
 
 
+@app.get('/dashboard.css')
+async def get_dashboard_css():
+	if os.path.isfile('dashboard.css'):
+		return FileResponse('dashboard.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
 @app.get('/api/admin/users')
 async def api_admin_users(request: Request):
 	caller = _current_user_email_from_request(request)
@@ -422,6 +418,28 @@ async def api_admin_leaves(request: Request):
 		raise HTTPException(status_code=403)
 	summary = {e: EMPLOYEES[e]['leaves'] for e in EMPLOYEES}
 	return JSONResponse(summary)
+
+
+@app.post('/api/admin/leave/{target_email}/{leave_id}/decision')
+async def api_admin_leave_decision(target_email: str, leave_id: str, request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+		raise HTTPException(status_code=403)
+	if target_email not in EMPLOYEES:
+		raise HTTPException(status_code=404)
+	try:
+		body = await request.json()
+	except Exception:
+		raise HTTPException(status_code=400, detail='Invalid request')
+	decision = body.get('status')
+	if decision not in ('Approved', 'Rejected'):
+		raise HTTPException(status_code=400, detail='Invalid decision')
+	leave = next((item for item in EMPLOYEES[target_email]['leaves'] if item.get('id') == leave_id), None)
+	if not leave:
+		raise HTTPException(status_code=404, detail='Leave request not found')
+	leave['status'] = decision
+	leave['admin_comment'] = str(body.get('comment', '')).strip()
+	return JSONResponse(leave)
 
 
 @app.get('/api/admin/payroll/runs')
