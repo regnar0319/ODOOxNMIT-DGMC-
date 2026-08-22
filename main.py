@@ -1,6 +1,8 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from urllib.parse import parse_qs, urlparse
+from http import cookies
+from datetime import datetime, date
 
 
 HOST = "127.0.0.1"
@@ -10,6 +12,23 @@ PORT = 8000
 USERS = {
 		"employee@dayflow.com": {"password": "Employee@123", "role": "employee"},
 		"hr@dayflow.com": {"password": "HrAdmin@123", "role": "hr"},
+}
+
+# Demo employee records (in-memory prototype)
+EMPLOYEES = {
+	"employee@dayflow.com": {
+		"profile": {
+			"name": "Alex Employee",
+			"email": "employee@dayflow.com",
+			"phone": "555-0101",
+			"address": "123 Dayflow Ave",
+			"job_title": "Software Engineer",
+			"department": "Engineering",
+		},
+		"attendance": [],  # list of {date: 'YYYY-MM-DD', checkin: t, checkout: t, status: 'Present'|...}
+		"leaves": [],  # list of {id, type, from, to, remarks, status}
+		"payroll": {"salary": 72000, "currency": "USD", "last_payslip": "2026-07-31"},
+	}
 }
 
 
@@ -168,48 +187,183 @@ PAGE = r'''<!doctype html>
 
 
 class DayflowHandler(BaseHTTPRequestHandler):
+		def _parse_cookies(self):
+			raw = self.headers.get('Cookie', '')
+			if not raw:
+				return {}
+			c = cookies.SimpleCookie()
+			c.load(raw)
+			return {k: v.value for k, v in c.items()}
+
+		def _current_user_email(self):
+			ck = self._parse_cookies()
+			return ck.get('session')
+
+		def _send_json(self, status, payload, extra_headers=None):
+			body = json.dumps(payload).encode('utf-8')
+			self.send_response(status)
+			self.send_header('Content-Type', 'application/json')
+			self.send_header('Content-Length', str(len(body)))
+			if extra_headers:
+				for k, v in extra_headers.items():
+					self.send_header(k, v)
+			self.end_headers()
+			self.wfile.write(body)
+
+		EMPLOYEE_DASH = r"""<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Employee Desk</title></head>
+<body>
+<h1>Employee Desk</h1>
+<div id="cards">
+<button id="profile">Profile</button>
+<button id="attendance">Attendance</button>
+<button id="leave">Leave Requests</button>
+<button id="payroll">Payroll</button>
+<button id="logout">Logout</button>
+</div>
+<div id="content"></div>
+<script>
+async function getJSON(path){const r=await fetch(path); if(!r.ok) throw r; return r.json();}
+document.getElementById('profile').onclick=async()=>{ try{const p=await getJSON('/api/profile'); document.getElementById('content').innerHTML=`<pre>${JSON.stringify(p,0,2)}</pre>`;}catch(e){alert('Failed');}};
+document.getElementById('attendance').onclick=async()=>{ try{const a=await getJSON('/api/attendance'); document.getElementById('content').innerHTML=`<pre>${JSON.stringify(a,0,2)}</pre>`;}catch(e){alert('Failed');}};
+document.getElementById('leave').onclick=async()=>{ try{const l=await getJSON('/api/leave'); document.getElementById('content').innerHTML=`<pre>${JSON.stringify(l,0,2)}</pre>`;}catch(e){alert('Failed');}};
+document.getElementById('payroll').onclick=async()=>{ try{const p=await getJSON('/api/payroll'); document.getElementById('content').innerHTML=`<pre>${JSON.stringify(p,0,2)}</pre>`;}catch(e){alert('Failed');}};
+document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=/; Max-Age=0'; location='/'; };
+</script></body></html>"""
+
 		def do_GET(self):
-				if urlparse(self.path).path == "/":
-						body = PAGE.encode("utf-8")
-						self.send_response(200)
-						self.send_header("Content-Type", "text/html; charset=utf-8")
-						self.send_header("Content-Length", str(len(body)))
-						self.end_headers()
-						self.wfile.write(body)
-				else:
-						self.send_error(404)
-
-		def do_POST(self):
-				if urlparse(self.path).path != "/api/login":
-						self.send_error(404)
-						return
-				try:
-						length = int(self.headers.get("Content-Length", "0"))
-						credentials = json.loads(self.rfile.read(length))
-						email = str(credentials.get("email", "")).strip().lower()
-						password = str(credentials.get("password", ""))
-				except (ValueError, json.JSONDecodeError, TypeError):
-						self._json_response(400, {"error": "Invalid request."})
-						return
-				user = USERS.get(email)
-				if not user or user["password"] != password:
-						self._json_response(401, {"error": "Invalid email or password."})
-						return
-				redirect = "/employee-dashboard" if user["role"] == "employee" else "/admin-dashboard"
-				self._json_response(200, {"redirect": redirect})
-
-		def _json_response(self, status, payload):
-				body = json.dumps(payload).encode("utf-8")
-				self.send_response(status)
-				self.send_header("Content-Type", "application/json")
+			path = urlparse(self.path).path
+			if path == "/":
+				body = PAGE.encode("utf-8")
+				self.send_response(200)
+				self.send_header("Content-Type", "text/html; charset=utf-8")
 				self.send_header("Content-Length", str(len(body)))
 				self.end_headers()
 				self.wfile.write(body)
+			elif path == "/employee-dashboard":
+				email = self._current_user_email()
+				if not email or email not in USERS or USERS[email]["role"] != "employee":
+					self.send_error(403)
+					return
+				body = self.EMPLOYEE_DASH.encode('utf-8')
+				self.send_response(200)
+				self.send_header('Content-Type', 'text/html; charset=utf-8')
+				self.send_header('Content-Length', str(len(body)))
+				self.end_headers()
+				self.wfile.write(body)
+			elif path == "/admin-dashboard":
+				body = b"<html><body><h1>Admin Dashboard (placeholder)</h1></body></html>"
+				self.send_response(200)
+				self.send_header('Content-Type', 'text/html; charset=utf-8')
+				self.send_header('Content-Length', str(len(body)))
+				self.end_headers()
+				self.wfile.write(body)
+			elif path.startswith('/api/'):
+				# API GETs: profile, attendance, leave, payroll
+				email = self._current_user_email()
+				if not email or email not in EMPLOYEES:
+					self._send_json(403, {'error': 'Not authenticated'})
+					return
+				if path == '/api/profile':
+					self._send_json(200, EMPLOYEES[email]['profile'])
+				elif path == '/api/attendance':
+					self._send_json(200, EMPLOYEES[email]['attendance'])
+				elif path == '/api/leave':
+					self._send_json(200, EMPLOYEES[email]['leaves'])
+				elif path == '/api/payroll':
+					self._send_json(200, EMPLOYEES[email]['payroll'])
+				else:
+					self.send_error(404)
+			else:
+				self.send_error(404)
+
+		def do_POST(self):
+			path = urlparse(self.path).path
+			if path == '/api/login':
+				try:
+					length = int(self.headers.get('Content-Length', '0'))
+					credentials = json.loads(self.rfile.read(length))
+					email = str(credentials.get('email', '')).strip().lower()
+					password = str(credentials.get('password', ''))
+				except (ValueError, json.JSONDecodeError, TypeError):
+					self._send_json(400, {'error': 'Invalid request.'})
+					return
+				user = USERS.get(email)
+				if not user or user['password'] != password:
+					self._send_json(401, {'error': 'Invalid email or password.'})
+					return
+				redirect = '/employee-dashboard' if user['role'] == 'employee' else '/admin-dashboard'
+				# set a simple session cookie (prototype only)
+				extra = {'Set-Cookie': f'session={email}; Path=/; HttpOnly'}
+				self._send_json(200, {'redirect': redirect}, extra_headers=extra)
+				return
+			# other POST API endpoints
+			email = self._current_user_email()
+			if not email or email not in EMPLOYEES:
+				self._send_json(403, {'error': 'Not authenticated'})
+				return
+			if path == '/api/profile':
+				try:
+					length = int(self.headers.get('Content-Length', '0'))
+					body = json.loads(self.rfile.read(length))
+				except Exception:
+					self._send_json(400, {'error': 'Invalid request'})
+					return
+				# only allow limited edits
+				for k in ('phone', 'address'):
+					if k in body:
+						EMPLOYEES[email]['profile'][k] = body[k]
+				self._send_json(200, EMPLOYEES[email]['profile'])
+				return
+			if path == '/api/attendance/checkin':
+				today = date.today().isoformat()
+				now = datetime.utcnow().isoformat()
+				att = EMPLOYEES[email]['attendance']
+				entry = next((x for x in att if x['date'] == today), None)
+				if not entry:
+					entry = {'date': today, 'checkin': now, 'checkout': None, 'status': 'Present'}
+					att.append(entry)
+				else:
+					entry['checkin'] = now
+				self._send_json(200, entry)
+				return
+			if path == '/api/attendance/checkout':
+				today = date.today().isoformat()
+				now = datetime.utcnow().isoformat()
+				att = EMPLOYEES[email]['attendance']
+				entry = next((x for x in att if x['date'] == today), None)
+				if not entry:
+					entry = {'date': today, 'checkin': None, 'checkout': now, 'status': 'Present'}
+					att.append(entry)
+				else:
+					entry['checkout'] = now
+				self._send_json(200, entry)
+				return
+			if path == '/api/leave':
+				try:
+					length = int(self.headers.get('Content-Length', '0'))
+					body = json.loads(self.rfile.read(length))
+				except Exception:
+					self._send_json(400, {'error': 'Invalid request'})
+					return
+				leave = {
+					'id': f"L{len(EMPLOYEES[email]['leaves'])+1}",
+					'type': body.get('type', 'Unpaid'),
+					'from': body.get('from'),
+					'to': body.get('to'),
+					'remarks': body.get('remarks', ''),
+					'status': 'Pending',
+				}
+				EMPLOYEES[email]['leaves'].append(leave)
+				self._send_json(201, leave)
+				return
+			self.send_error(404)
 
 		def log_message(self, format, *args):
-				return
+			return
 
 
 if __name__ == "__main__":
 		print(f"Dayflow sign-in running at http://{HOST}:{PORT}")
 		HTTPServer((HOST, PORT), DayflowHandler).serve_forever()
+
