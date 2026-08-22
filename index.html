@@ -1,235 +1,246 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#edf2f6" />
-    <title>Dayflow HRMS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <script defer src="app.js"></script>
-  </head>
-  <body>
-    <div class="app-frame">
-      <aside class="sidebar">
-        <div class="sidebar-brand">
-          <div class="brand-mark">D</div>
-          <div class="brand-word">dayflow.</div>
-        </div>
 
-        <nav class="sidebar-nav" aria-label="Sidebar navigation">
-          <button class="nav-item" type="button" data-view="dashboard">
-            <span class="nav-icon">⌂</span>
-            <span>Dashboard</span>
-          </button>
-          <button class="nav-item active" type="button" data-view="profile">
-            <span class="nav-icon">◉</span>
-            <span>My Profile</span>
-          </button>
-          <button class="nav-item" type="button" data-view="attendance">
-            <span class="nav-icon">◫</span>
-            <span>Attendance</span>
-          </button>
-          <button class="nav-item" type="button" data-view="timeoff">
-            <span class="nav-icon">✦</span>
-            <span>Time Off</span>
-          </button>
-          <button class="nav-item" type="button" data-view="payroll">
-            <span class="nav-icon">◌</span>
-            <span>Payroll</span>
-          </button>
-          <button class="nav-item" type="button" data-view="employees">
-            <span class="nav-icon">☰</span>
-            <span>Employees</span>
-          </button>
-        </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#edf2f6" />
+  <title>Dayflow HRMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="app.js"></script>
+</head>
 
-        <div class="sidebar-user">
-          <div class="user-avatar">AM</div>
-          <div class="user-meta">
-            <strong>Amelia Moore</strong>
-            <span>HR account</span>
-          </div>
-        </div>
-      </aside>
-
-      <div class="main-panel">
-        <header class="topbar">
-          <div class="breadcrumb">Workspace / <span id="breadcrumb-label">My Profile</span></div>
-
-          <div class="topbar-actions">
-            <button class="icon-button" type="button" aria-label="Notifications">
-              <span class="bell"></span>
-              <span class="notification-dot"></span>
-            </button>
-
-            <div class="profile-menu-wrap">
-              <button class="profile-trigger" type="button" aria-label="User profile menu">
-                <span class="mini-avatar">AM</span>
-                <span class="profile-name">Amelia Moore</span>
-                <span class="caret">▾</span>
-              </button>
-              <div class="profile-dropdown" aria-label="Profile dropdown">
-                <button type="button">My Account</button>
-                <button type="button">Settings</button>
-                <button type="button">Logout</button>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <main class="content-area">
-          <section class="page-header">
-            <div>
-              <p class="eyebrow">EMPLOYEE RECORD</p>
-              <h1 id="page-title">My profile</h1>
-              <p id="page-description">Keep your personal and professional information up to date.</p>
-            </div>
-            <div class="header-actions">
-              <button type="button" class="secondary-button" id="header-secondary-action">Download</button>
-              <button type="button" class="primary-button" id="edit-profile-button">Edit Profile</button>
-            </div>
-          </section>
-
-          <div id="page-content"></div>
-        </main>
+<body>
+  <div class="app-frame">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">D</div>
+        <div class="brand-word">dayflow.</div>
       </div>
+
+      <nav class="sidebar-nav" aria-label="Sidebar navigation">
+        <button class="nav-item" type="button" data-view="dashboard">
+          <span class="nav-icon">⌂</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item active" type="button" data-view="profile">
+          <span class="nav-icon">◉</span>
+          <span>My Profile</span>
+        </button>
+        <button class="nav-item" type="button" data-view="attendance">
+          <span class="nav-icon">◫</span>
+          <span>Attendance</span>
+        </button>
+        <button class="nav-item" type="button" data-view="timeoff">
+          <span class="nav-icon">✦</span>
+          <span>Time Off</span>
+        </button>
+        <button class="nav-item" type="button" data-view="payroll">
+          <span class="nav-icon">◌</span>
+          <span>Payroll</span>
+        </button>
+        <button class="nav-item" type="button" data-view="employees">
+          <span class="nav-icon">☰</span>
+          <span>Employees</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-user">
+        <div class="user-avatar">AM</div>
+        <div class="user-meta">
+          <strong>Amelia Moore</strong>
+          <span>HR account</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-panel">
+      <header class="topbar">
+        <div class="breadcrumb">Workspace / <span id="breadcrumb-label">My Profile</span></div>
+
+        <div class="topbar-actions">
+          <button class="icon-button" type="button" aria-label="Notifications">
+            <span class="bell"></span>
+            <span class="notification-dot"></span>
+          </button>
+
+          <div class="profile-menu-wrap">
+            <button class="profile-trigger" type="button" aria-label="User profile menu">
+              <span class="mini-avatar">AM</span>
+              <span class="profile-name">Amelia Moore</span>
+              <span class="caret">▾</span>
+            </button>
+            <div class="profile-dropdown" aria-label="Profile dropdown">
+              <button type="button">My Account</button>
+              <button type="button">Settings</button>
+              <button type="button">Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <section class="page-header">
+          <div>
+            <p class="eyebrow">EMPLOYEE RECORD</p>
+            <h1 id="page-title">My profile</h1>
+            <p id="page-description">Keep your personal and professional information up to date.</p>
+          </div>
+          <div class="header-actions">
+            <button type="button" class="secondary-button" id="header-secondary-action">Download</button>
+            <button type="button" class="primary-button" id="edit-profile-button">Edit Profile</button>
+          </div>
+        </section>
+
+        <div id="page-content"></div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-backdrop"></div>
+
+  <aside class="modal drawer hidden" id="profile-modal" aria-modal="true" role="dialog"
+    aria-labelledby="profile-modal-title">
+    <div class="modal-header">
+      <div>
+        <p class="eyebrow small">Permissions</p>
+        <h3 id="profile-modal-title">Edit Profile</h3>
+      </div>
+      <button type="button" class="close-button" data-close="profile-modal" aria-label="Close modal">×</button>
     </div>
 
-    <div class="modal-backdrop hidden" id="modal-backdrop"></div>
-
-    <aside class="modal drawer hidden" id="profile-modal" aria-modal="true" role="dialog" aria-labelledby="profile-modal-title">
-      <div class="modal-header">
-        <div>
-          <p class="eyebrow small">Permissions</p>
-          <h3 id="profile-modal-title">Edit Profile</h3>
-        </div>
-        <button type="button" class="close-button" data-close="profile-modal" aria-label="Close modal">×</button>
+    <form id="profile-form" class="modal-form">
+      <div class="field-group two-up">
+        <label>
+          <span>Full name</span>
+          <input type="text" name="fullName" value="Amelia Moore" required />
+        </label>
+        <label>
+          <span>Login ID</span>
+          <input type="text" name="loginId" value="EMP001" required />
+        </label>
       </div>
 
-      <form id="profile-form" class="modal-form">
-        <div class="field-group two-up">
-          <label>
-            <span>Full name</span>
-            <input type="text" name="fullName" value="Amelia Moore" required />
-          </label>
-          <label>
-            <span>Login ID</span>
-            <input type="text" name="loginId" value="EMP001" required />
-          </label>
-        </div>
-
-        <div class="field-group two-up">
-          <label>
-            <span>Email</span>
-            <input type="email" name="email" value="admin@company.com" required />
-          </label>
-          <label>
-            <span>Mobile</span>
-            <input type="tel" name="mobile" value="+91 98765 43210" required />
-          </label>
-        </div>
-
-        <div class="field-group two-up">
-          <label>
-            <span>Company</span>
-            <input type="text" name="company" value="Dayflow Labs" required />
-          </label>
-          <label>
-            <span>Department</span>
-            <input type="text" name="department" value="Human Resources" required />
-          </label>
-        </div>
-
-        <div class="field-group two-up">
-          <label>
-            <span>Manager</span>
-            <input type="text" name="manager" value="Daniel Sutton" />
-          </label>
-          <label>
-            <span>Location</span>
-            <input type="text" name="location" value="Hyderabad, IN" />
-          </label>
-        </div>
-
-        <div class="field-group">
-          <label>
-            <span>About</span>
-            <textarea name="about" rows="4">Strategic HR leader with a focus on people operations, culture enablement, and operational excellence across growing organizations.</textarea>
-          </label>
-        </div>
-
-        <div class="field-group">
-          <label>
-            <span>What I love about my job</span>
-            <textarea name="love" rows="3">I enjoy shaping employee experience, improving processes, and helping teams grow with clarity, purpose, and support.</textarea>
-          </label>
-        </div>
-
-        <div class="field-group">
-          <label>
-            <span>My interests and hobbies</span>
-            <textarea name="hobbies" rows="3">Reading leadership journals, mentoring emerging professionals, walking in nature, and learning new productivity frameworks.</textarea>
-          </label>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="secondary-button" data-close="profile-modal">Cancel</button>
-          <button type="submit" class="primary-button">Save Changes</button>
-        </div>
-      </form>
-    </aside>
-
-    <aside class="modal small hidden" id="skill-modal" aria-modal="true" role="dialog" aria-labelledby="skill-modal-title">
-      <div class="modal-header">
-        <div>
-          <p class="eyebrow small">Add skill</p>
-          <h3 id="skill-modal-title">Add new skill</h3>
-        </div>
-        <button type="button" class="close-button" data-close="skill-modal" aria-label="Close skill modal">×</button>
+      <div class="field-group two-up">
+        <label>
+          <span>Email</span>
+          <input type="email" name="email" value="admin@company.com" required />
+        </label>
+        <label>
+          <span>Mobile</span>
+          <input type="tel" name="mobile" value="+91 98765 43210" required />
+        </label>
       </div>
-      <form id="skill-form" class="modal-form compact-form">
-        <label>
-          <span>Skill name</span>
-          <input type="text" name="skill" placeholder="Example: Workplace Strategy" required />
-        </label>
-        <div class="modal-actions">
-          <button type="button" class="secondary-button" data-close="skill-modal">Cancel</button>
-          <button type="submit" class="primary-button">Add Skill</button>
-        </div>
-      </form>
-    </aside>
 
-    <aside class="modal small hidden" id="cert-modal" aria-modal="true" role="dialog" aria-labelledby="cert-modal-title">
-      <div class="modal-header">
-        <div>
-          <p class="eyebrow small">Certification</p>
-          <h3 id="cert-modal-title">Add certification</h3>
-        </div>
-        <button type="button" class="close-button" data-close="cert-modal" aria-label="Close certification modal">×</button>
+      <div class="field-group two-up">
+        <label>
+          <span>Company</span>
+          <input type="text" name="company" value="Dayflow Labs" required />
+        </label>
+        <label>
+          <span>Department</span>
+          <input type="text" name="department" value="Human Resources" required />
+        </label>
       </div>
-      <form id="cert-form" class="modal-form compact-form">
-        <label>
-          <span>Certification name</span>
-          <input type="text" name="name" placeholder="e.g. SHRM-CP" required />
-        </label>
-        <label>
-          <span>Issuing organization</span>
-          <input type="text" name="organization" placeholder="e.g. SHRM" required />
-        </label>
-        <label>
-          <span>Issued date</span>
-          <input type="date" name="date" required />
-        </label>
-        <div class="modal-actions">
-          <button type="button" class="secondary-button" data-close="cert-modal">Cancel</button>
-          <button type="submit" class="primary-button">Add Certification</button>
-        </div>
-      </form>
-    </aside>
 
-    <div class="toast" id="toast" role="status" aria-live="polite">Profile updated successfully.</div>
-  </body>
+      <div class="field-group two-up">
+        <label>
+          <span>Manager</span>
+          <input type="text" name="manager" value="Daniel Sutton" />
+        </label>
+        <label>
+          <span>Location</span>
+          <input type="text" name="location" value="Hyderabad, IN" />
+        </label>
+      </div>
+
+      <div class="field-group">
+        <label>
+          <span>About</span>
+          <textarea name="about"
+            rows="4">Strategic HR leader with a focus on people operations, culture enablement, and operational excellence across growing organizations.</textarea>
+        </label>
+      </div>
+
+      <div class="field-group">
+        <label>
+          <span>What I love about my job</span>
+          <textarea name="love"
+            rows="3">I enjoy shaping employee experience, improving processes, and helping teams grow with clarity, purpose, and support.</textarea>
+        </label>
+      </div>
+
+      <div class="field-group">
+        <label>
+          <span>My interests and hobbies</span>
+          <textarea name="hobbies"
+            rows="3">Reading leadership journals, mentoring emerging professionals, walking in nature, and learning new productivity frameworks.</textarea>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="secondary-button" data-close="profile-modal">Cancel</button>
+        <button type="submit" class="primary-button">Save Changes</button>
+      </div>
+    </form>
+  </aside>
+
+  <aside class="modal small hidden" id="skill-modal" aria-modal="true" role="dialog"
+    aria-labelledby="skill-modal-title">
+    <div class="modal-header">
+      <div>
+        <p class="eyebrow small">Add skill</p>
+        <h3 id="skill-modal-title">Add new skill</h3>
+      </div>
+      <button type="button" class="close-button" data-close="skill-modal" aria-label="Close skill modal">×</button>
+    </div>
+    <form id="skill-form" class="modal-form compact-form">
+      <label>
+        <span>Skill name</span>
+        <input type="text" name="skill" placeholder="Example: Workplace Strategy" required />
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="secondary-button" data-close="skill-modal">Cancel</button>
+        <button type="submit" class="primary-button">Add Skill</button>
+      </div>
+    </form>
+  </aside>
+
+  <aside class="modal small hidden" id="cert-modal" aria-modal="true" role="dialog" aria-labelledby="cert-modal-title">
+    <div class="modal-header">
+      <div>
+        <p class="eyebrow small">Certification</p>
+        <h3 id="cert-modal-title">Add certification</h3>
+      </div>
+      <button type="button" class="close-button" data-close="cert-modal"
+        aria-label="Close certification modal">×</button>
+    </div>
+    <form id="cert-form" class="modal-form compact-form">
+      <label>
+        <span>Certification name</span>
+        <input type="text" name="name" placeholder="e.g. SHRM-CP" required />
+      </label>
+      <label>
+        <span>Issuing organization</span>
+        <input type="text" name="organization" placeholder="e.g. SHRM" required />
+      </label>
+      <label>
+        <span>Issued date</span>
+        <input type="date" name="date" required />
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="secondary-button" data-close="cert-modal">Cancel</button>
+        <button type="submit" class="primary-button">Add Certification</button>
+      </div>
+    </form>
+  </aside>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">Profile updated successfully.</div>
+</body>
+
 </html>
