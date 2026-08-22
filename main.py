@@ -309,6 +309,34 @@ async def get_auth_js():
 	raise HTTPException(status_code=404)
 
 
+@app.get('/auth/signin.html')
+async def get_signin_page():
+	if os.path.isfile('auth/signin.html'):
+		return FileResponse('auth/signin.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/auth/signup.html')
+async def get_signup_page():
+	if os.path.isfile('auth/signup.html'):
+		return FileResponse('auth/signup.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/auth/auth.css')
+async def get_auth_stylesheet():
+	if os.path.isfile('auth/auth.css'):
+		return FileResponse('auth/auth.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/auth/auth.js')
+async def get_auth_script():
+	if os.path.isfile('auth/auth.js'):
+		return FileResponse('auth/auth.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
 @app.post('/api/login')
 async def api_login(request: Request, response: Response):
 	try:
@@ -418,6 +446,95 @@ async def get_dashboard_css():
 async def get_dashboard_js():
 	if os.path.isfile('dashboard.js'):
 		return FileResponse('dashboard.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/profile-page.css')
+async def get_profile_css():
+	if os.path.isfile('profile-page.css'):
+		return FileResponse('profile-page.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/profile-page.js')
+async def get_profile_js():
+	if os.path.isfile('profile-page.js'):
+		return FileResponse('profile-page.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/admin-profile')
+@app.get('/admin-profile.html')
+async def get_admin_profile_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
+		raise HTTPException(status_code=403)
+	if os.path.isfile('admin_profile.html'):
+		return FileResponse('admin_profile.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/admin_profile.css')
+async def get_admin_profile_css():
+	if os.path.isfile('admin_profile.css'):
+		return FileResponse('admin_profile.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/admin_profile.js')
+async def get_admin_profile_js():
+	if os.path.isfile('admin_profile.js'):
+		return FileResponse('admin_profile.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/employees.css')
+async def get_employees_css():
+	if os.path.isfile('employees.css'):
+		return FileResponse('employees.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/employees.js')
+async def get_employees_js():
+	if os.path.isfile('employees.js'):
+		return FileResponse('employees.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/attendance')
+@app.get('/attendance.html')
+async def get_attendance_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
+		raise HTTPException(status_code=403)
+	if os.path.isfile('attendance.html'):
+		return FileResponse('attendance.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/attendance.js')
+async def get_attendance_js():
+	if os.path.isfile('attendance.js'):
+		return FileResponse('attendance.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/timeoff')
+@app.get('/timeoff.html')
+async def get_timeoff_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
+		raise HTTPException(status_code=403)
+	if os.path.isfile('timeoff.html'):
+		return FileResponse('timeoff.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/timeoff.js')
+async def get_timeoff_js():
+	if os.path.isfile('timeoff.js'):
+		return FileResponse('timeoff.js', media_type='application/javascript')
 	raise HTTPException(status_code=404)
 
 
