@@ -1,0 +1,37 @@
+const profileRoot = document.querySelector('#profile-content');
+const profileOverlay = document.querySelector('#profile-overlay');
+let profile = null;
+let activeTab = 'overview';
+const esc = (value = '') => String(value).replace(/[&<>\"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
+const valueOr = (value) => value ? esc(value) : 'Not provided';
+const date = (value) => value ? new Date(`${value}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Not provided';
+const initials = (name = '') => name.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join('').toUpperCase() || 'ME';
+function item(label, value) { return `<div class="info-item"><span>${label}</span><strong>${value}</strong></div>`; }
+function metaItem(label, value) { return `<span><span>${label}</span><strong>${value}</strong></span>`; }
+function empty(text) { return `<div class="empty-profile">${text}</div>`; }
+function panel(title, body, extra = '') { return `<section class="card profile-panel"><div class="section-head"><h2>${title}</h2>${extra}</div>${body}</section>`; }
+function render() {
+    const p = profile;
+    const summary = `<section class="card profile-summary"><div class="profile-photo" id="profile-photo">${initials(p.name)}<button class="photo-button" id="photo-button" type="button" aria-label="Change profile picture">⌑</button><input id="photo-input" type="file" accept="image/*" hidden></div><div class="profile-identity"><h2>${valueOr(p.name)}</h2><p>${valueOr(p.job_title)} · ${valueOr(p.department)}</p><div class="identity-meta">${metaItem('Employee ID', valueOr(p.employee_id))}${metaItem('Work Email', valueOr(p.email))}${metaItem('Joined', date(p.joined))}</div></div><div class="profile-status">${`<span class="badge active">${valueOr(p.employment_status || 'Active')}</span>`}<button class="secondary" id="edit-profile">Edit Profile</button></div></section>`;
+    const tabs = `<nav class="profile-tabs" aria-label="Profile sections">${['overview', 'personal', 'job', 'salary', 'documents'].map((tab) => `<button class="profile-tab ${activeTab === tab ? 'active' : ''}" data-tab="${tab}">${{ overview: 'Overview', personal: 'Personal Info', job: 'Job Info', salary: 'Salary Info', documents: 'Documents' }[tab]}</button>`).join('')}</nav>`;
+    let content = '';
+    if (activeTab === 'overview') content = `<div class="profile-grid">${panel('About', p.about ? `<p>${valueOr(p.about)}</p>` : empty('No professional summary available.'))}${panel('Skills', empty('No skills added yet'))}${panel('What I Love About My Job', p.love ? `<p>${valueOr(p.love)}</p>` : empty('No description added yet'))}${panel('Certifications', empty('No certifications added yet'))}${panel('Interests & Hobbies', p.hobbies ? `<p>${valueOr(p.hobbies)}</p>` : empty('No interests or hobbies added yet'))}</div>`;
+    if (activeTab === 'personal') content = `<div class="profile-grid">${panel('Personal Information', `<div class="info-grid">${item('Full Name', valueOr(p.name))}${item('Work Email', valueOr(p.email))}${item('Phone', valueOr(p.phone))}${item('Address', valueOr(p.address))}</div>`)}</div>`;
+    if (activeTab === 'job') content = `<div class="profile-grid">${panel('Employment Information', `<div class="info-grid">${item('Employee ID', valueOr(p.employee_id))}${item('Department', valueOr(p.department))}${item('Designation', valueOr(p.job_title))}${item('Manager', valueOr(p.manager))}${item('Location', valueOr(p.location))}${item('Joining Date', date(p.joined))}${item('Employment Status', valueOr(p.employment_status || 'Active'))}</div>`)}</div>`;
+    if (activeTab === 'salary') content = `<div class="profile-grid">${panel('Salary Information', `<p>Salary information is read-only for employees.</p>${empty('Salary details are not provided.')}`)}</div>`;
+    if (activeTab === 'documents') content = `<div class="profile-grid">${panel('Documents', `<p>Documents associated with your employee record.</p>${empty('No documents available')}`)}</div>`;
+    profileRoot.innerHTML = `<header class="page-header"><div><p class="eyebrow">EMPLOYEE RECORD</p><h1>My Profile</h1><p>Keep your personal and professional information up to date.</p></div></header>${summary}${tabs}${content}`;
+    document.querySelectorAll('[data-tab]').forEach((tab) => tab.addEventListener('click', () => { activeTab = tab.dataset.tab; render(); }));
+    $('#edit-profile').addEventListener('click', openEdit);
+    $('#photo-button').addEventListener('click', () => $('#photo-input').click());
+    $('#photo-input').addEventListener('change', previewPhoto);
+}
+function $(selector) { return document.querySelector(selector); }
+function openEdit() { profileOverlay.innerHTML = `<div class="drawer-backdrop" data-close-profile></div><aside class="drawer" aria-label="Edit Profile"><button class="drawer-close" data-close-profile aria-label="Close">×</button><p class="eyebrow">EMPLOYEE RECORD</p><h2>Edit Profile</h2><p style="color:var(--muted);font-size:.78rem">Update the information you are allowed to change.</p><form class="drawer-form" id="profile-form"><label>Phone<input name="phone" value="${esc(profile.phone || '')}" placeholder="Add phone number"></label><label>Address<textarea name="address" placeholder="Add current address">${esc(profile.address || '')}</textarea></label><p id="profile-message" class="profile-message"></p><div class="drawer-actions"><button class="secondary" type="button" data-close-profile>Cancel</button><button class="primary" type="submit">Save Changes</button></div></form></aside>`; profileOverlay.querySelectorAll('[data-close-profile]').forEach((node) => node.addEventListener('click', closeEdit)); $('#profile-form').addEventListener('submit', saveProfile); }
+function closeEdit() { profileOverlay.innerHTML = ''; }
+async function saveProfile(event) { event.preventDefault(); const form = event.currentTarget; const button = form.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Saving...'; try { profile = await api('/api/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: form.elements.phone.value.trim(), address: form.elements.address.value.trim() }) }); closeEdit(); render(); } catch { $('#profile-message').textContent = 'Unable to update profile. Please try again.'; button.disabled = false; button.textContent = 'Save Changes'; } }
+function previewPhoto(event) { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { $('#profile-photo').style.backgroundImage = `url(${reader.result})`; $('#profile-photo').style.backgroundSize = 'cover'; $('#profile-photo').textContent = ''; }; reader.readAsDataURL(file); }
+async function api(path, options = {}) { const response = await fetch(path, { credentials: 'same-origin', ...options }); if (!response.ok) throw new Error('Request failed'); return response.json(); }
+async function load() { try { profile = await api('/api/profile'); render(); } catch { profileRoot.innerHTML = `<section class="card section"><div class="empty">Unable to load profile<br><button class="secondary" id="retry-profile" style="margin-top:12px">Try Again</button></div></section>`; $('#retry-profile').addEventListener('click', load); } }
+$('#menu-button')?.addEventListener('click', () => document.querySelector('.sidebar')?.classList.toggle('open'));
+load();

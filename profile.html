@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Profile | Dayflow</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="profile-page.css">
+</head>
+
+<body data-profile-page>
+    <div class="app">
+        <aside class="sidebar"><a class="brand" href="/employee-spa"><span
+                    class="brand-mark">d</span><span>dayflow.</span></a>
+            <nav class="nav"><a href="/employee-spa">⌂ <span>Dashboard</span></a><a class="active" href="profile.html">◯
+                    <span>My Profile</span></a><a href="/employee-spa#attendance">◷ <span>Attendance</span></a><a
+                    href="/employee-spa#timeoff">□ <span>Time Off</span></a><a href="/employee-spa#payroll">▤
+                    <span>Payroll</span></a></nav>
+            <div class="sidebar-bottom"><a href="#">⚙ <span>Settings</span></a><a href="#">? <span>Help</span></a><a
+                    href="/">↪ <span>Logout</span></a></div>
+        </aside>
+        <main class="main">
+            <header class="topbar"><button class="mobile-menu" id="menu-button"
+                    aria-label="Open navigation">☰</button><span class="breadcrumb">Workspace / My Profile</span>
+                <div class="top-actions"><button class="top-button" aria-label="Search">⌕</button><button
+                        class="top-button" aria-label="Notifications">♧</button><button class="avatar-button"
+                        id="header-avatar" aria-label="Profile">ME</button></div>
+            </header>
+            <div class="workspace">
+                <div id="profile-content">
+                    <div class="profile-skeleton skeleton"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="profile-overlay"></div>
+    <script src="profile-page.js" defer></script>
+</body>
+
+</html>

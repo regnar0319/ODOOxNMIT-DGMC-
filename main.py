@@ -421,6 +421,28 @@ async def get_dashboard_js():
 	raise HTTPException(status_code=404)
 
 
+@app.get('/profile')
+@app.get('/profile.html')
+async def get_profile_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in EMPLOYEES:
+		raise HTTPException(status_code=403)
+	if os.path.isfile('profile.html'):
+		return FileResponse('profile.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/employees')
+@app.get('/employees.html')
+async def get_employees_page(request: Request):
+	caller = _current_user_email_from_request(request)
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
+		raise HTTPException(status_code=403)
+	if os.path.isfile('employees.html'):
+		return FileResponse('employees.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
 @app.get('/api/admin/users')
 async def api_admin_users(request: Request):
 	caller = _current_user_email_from_request(request)
@@ -508,6 +530,22 @@ async def api_profile(request: Request):
 	if not email or email not in EMPLOYEES:
 		raise HTTPException(status_code=403)
 	return JSONResponse(EMPLOYEES[email]['profile'])
+
+
+@app.post('/api/profile')
+async def api_profile_update(request: Request):
+	email = _current_user_email_from_request(request)
+	if not email or email not in EMPLOYEES:
+		raise HTTPException(status_code=403)
+	try:
+		body = await request.json()
+	except Exception:
+		raise HTTPException(status_code=400, detail='Invalid request')
+	profile = EMPLOYEES[email]['profile']
+	for field in ('phone', 'address'):
+		if field in body:
+			profile[field] = str(body[field]).strip()
+	return JSONResponse(profile)
 
 
 @app.get('/api/attendance')
