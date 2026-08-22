@@ -1,6 +1,8 @@
 """Supabase-backed authentication routes for Dayflow."""
 
 import os
+import re
+import logging
 from typing import Any, Literal
 
 from dotenv import load_dotenv
@@ -22,7 +24,7 @@ class SignupRequest(BaseModel):
 
 
 class SigninRequest(BaseModel):
-	email: EmailStr
+	email: str
 	password: str = Field(min_length=1, max_length=128)
 
 
@@ -51,6 +53,7 @@ def get_supabase_admin() -> Client | None:
 
 
 router = APIRouter(tags=["authentication"])
+logger = logging.getLogger(__name__)
 
 
 def _user_value(user: Any, name: str, default: Any = None) -> Any:
@@ -65,24 +68,48 @@ def _response_value(response: Any, name: str, default: Any = None) -> Any:
 	return getattr(response, name, default)
 
 
+def _result_data(response: Any) -> Any:
+	return _response_value(response, "data", response)
+
+
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def signup(payload: SignupRequest, supabase: Client = Depends(get_supabase)) -> dict[str, Any]:
 	email = payload.email.strip().lower()
+<<<<<<< HEAD
+	if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+		raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Please enter a valid email address.")
+	role = payload.role.lower()
+	if role == "admin":
+		raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="HR accounts must be provisioned by an administrator.")
+	role = "employee"
+=======
 	role = "admin" if payload.role.lower() in {"admin", "hr"} else "employee"
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
 	admin_client = get_supabase_admin()
+	if not admin_client:
+		raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Account provisioning is not configured.")
 
 	try:
-		auth_response = supabase.auth.sign_up({
-			"email": email,
-			"password": payload.password,
-			"options": {"data": {"employee_id": payload.employee_id, "role": role, "name": payload.name, "company": payload.company, "phone": payload.phone}},
-		})
-		user = _response_value(auth_response, "user")
+		if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+			raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Please enter a valid email address.")
+		role = "admin" if payload.role.lower() in {"admin", "hr"} else "employee"
 		if not user:
 			raise ValueError("Supabase did not return a user")
+		auth_user_id = _user_value(user, "id")
+		if not auth_user_id:
+			raise ValueError("Supabase user has no ID")
 
 		profile = {
+<<<<<<< HEAD
 			"employee_id": payload.employee_id,
+=======
+<<<<<<< HEAD
+			"auth_user_id": auth_user_id,
+			"employee_id": payload.employee_id,
+=======
+			"employee_id": payload.user_id,
+>>>>>>> 05e260b85b22d538e46272c3fadb8495a63f1ebf
+>>>>>>> 86b5b1a314606f9c4ba21cc41b646e79e9667427
 			"email": email,
 			"role": role,
 			"full_name": payload.name,
@@ -91,10 +118,9 @@ def signup(payload: SignupRequest, supabase: Client = Depends(get_supabase)) -> 
 			"employment_status": "Active",
 			"profile_picture_url": None,
 		}
-		if admin_client:
-			admin_client.table("employees").insert(profile).execute()
-		else:
-			supabase.table("employees").insert(profile).execute()
+		admin_client.table("employees").insert(profile).execute()
+	except HTTPException:
+		raise
 	except Exception as exc:
 		# Remove the Auth user when the profile insert fails and server-side
 		# service credentials are available, avoiding an unusable half-account.
@@ -104,6 +130,7 @@ def signup(payload: SignupRequest, supabase: Client = Depends(get_supabase)) -> 
 				admin_client.auth.admin.delete_user(user_id)
 			except Exception:
 				pass
+		logger.exception("Signup failed while provisioning employee profile")
 		raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Unable to create account. The email or employee ID may already exist.") from exc
 
 	return {
@@ -116,6 +143,8 @@ def signup(payload: SignupRequest, supabase: Client = Depends(get_supabase)) -> 
 @router.post("/signin")
 def signin(payload: SigninRequest, response: Response, supabase: Client = Depends(get_supabase)) -> dict[str, Any]:
 	email = payload.email.strip().lower()
+	if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+		raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Please enter a valid email address.")
 	try:
 		auth_response = supabase.auth.sign_in_with_password({"email": email, "password": payload.password})
 		session = _response_value(auth_response, "session")
@@ -130,11 +159,15 @@ def signin(payload: SigninRequest, response: Response, supabase: Client = Depend
 		if role in {"admin", "hr"}:
 			role = "hr"
 		response.set_cookie(key="session", value=access_token, path="/", httponly=True, samesite="lax", secure=os.getenv("COOKIE_SECURE", "false").lower() == "true")
+		employee = None
 		return {
 			"access_token": access_token,
 			"token_type": "bearer",
 			"redirect": "/admin-spa" if role == "hr" else "/employee-spa",
 			"user": {"id": _user_value(user, "id"), "email": _user_value(user, "email", email), "role": role},
+			"employee": employee,
 		}
+	except HTTPException:
+		raise
 	except Exception as exc:
 		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password") from exc

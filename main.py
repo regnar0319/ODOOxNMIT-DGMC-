@@ -6,6 +6,8 @@ from http import cookies
 from datetime import datetime, date, timezone
 import os
 import mimetypes
+from dotenv import load_dotenv
+load_dotenv('.env.local')
 try:
 	from supabase import create_client
 except Exception:
@@ -13,7 +15,7 @@ except Exception:
 
 # Supabase client initialization (uses environment variables)
 SUPABASE_URL = os.environ.get('SUPABASE_URL') or os.environ.get('NEXT_PUBLIC_SUPABASE_URL')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY') or os.environ.get('SUPABASE_ANON_KEY') or os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY') or os.environ.get('SUPABASE_ANON_KEY') or os.environ.get('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
 if create_client and SUPABASE_URL and SUPABASE_KEY:
 	try:
 		supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -27,13 +29,26 @@ def get_supabase():
 		raise RuntimeError('Supabase client not configured. Set SUPABASE_URL and SUPABASE_KEY.')
 	return supabase
 
+def get_supabase_admin_client():
+	if not SUPABASE_URL or not os.environ.get('SUPABASE_SERVICE_ROLE_KEY') or not create_client:
+		return None
+	try:
+		return create_client(SUPABASE_URL, os.environ['SUPABASE_SERVICE_ROLE_KEY'])
+	except Exception:
+		return None
+
+
+def _user_value(user, name, default=None):
+	if isinstance(user, dict):
+		return user.get(name, default)
+	return getattr(user, name, default)
 # Provide an ASGI app so Render/uvicorn can import `main:app`.
 from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse
 from auth_router import router as auth_router
 
 app = FastAPI()
-app.include_router(auth_router)
+app.include_router(auth_router, prefix='/api')
 
 
 def _parse_cookies_from_header(cookie_header: str):
@@ -61,21 +76,67 @@ def _normalized_user_role(email):
 
 
 def _register_authenticated_user(user):
-	email = (getattr(user, 'email', None) or '').strip().lower()
+	email = (_user_value(user, 'email') or '').strip().lower()
 	if not email:
 		return None, 'employee'
-	metadata = getattr(user, 'app_metadata', {}) or {}
-	user_metadata = getattr(user, 'user_metadata', {}) or {}
+	metadata = _user_value(user, 'app_metadata', {}) or {}
+	user_metadata = _user_value(user, 'user_metadata', {}) or {}
 	role = _normalize_role(metadata.get('role') or metadata.get('user_role') or user_metadata.get('role'))
 	USERS[email] = {'role': role, 'active': True}
-	if role == 'employee':
-		EMPLOYEES.setdefault(email, {
-			'profile': {'name': user_metadata.get('name') or email.split('@')[0], 'email': email, 'phone': user_metadata.get('phone', ''), 'address': '', 'job_title': '', 'department': user_metadata.get('company', '')},
-			'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None},
-		})
 	return email, role
 
+def _supabase_employee_for_user(user_id, access_token=None):
+	client = get_supabase_admin_client()
+	if client is None and access_token and SUPABASE_URL and SUPABASE_KEY and create_client:
+		try:
+			client = create_client(SUPABASE_URL, SUPABASE_KEY)
+			client.postgrest.auth(access_token)
+		except Exception:
+			client = None
+	if client is None:
+		return None
 
+
+def _profile_view(employee):
+	return {
+		'name': employee.get('full_name') or employee.get('name') or 'Not provided',
+		'email': employee.get('email') or 'Not provided',
+		'phone': employee.get('phone') or '',
+		'address': employee.get('address') or '',
+		'job_title': employee.get('designation') or employee.get('job_title') or '',
+		'department': employee.get('department') or '',
+		'employee_id': employee.get('employee_id') or '',
+		'manager': employee.get('manager') or '',
+		'location': employee.get('location') or '',
+		'joining_date': employee.get('joining_date'),
+		'employment_status': employee.get('employment_status') or 'Active',
+	}
+	try:
+		result = client.table('employees').select('*').eq('auth_user_id', user_id).limit(1).execute()
+		return result.data[0] if result.data else None
+	except Exception:
+		return None
+
+
+def _supabase_user_for_request(request: Request):
+	if not supabase:
+		return None, None
+	session = _parse_cookies_from_header(request.headers.get('cookie', '')).get('session', '')
+	if not session or session.endswith('@dayflow.com'):
+		return None, None
+	try:
+		response = supabase.auth.get_user(session)
+		return _user_value(response, 'user'), session
+	except Exception:
+		return None, None
+
+def _authenticated_employee(request: Request):
+	user_email = _current_user_email_from_request(request)
+	if not user_email:
+		return None, None
+	if supabase and not user_email.endswith('@dayflow.com'):
+		return None, None
+	return user_email, EMPLOYEES.get(user_email)
 def _current_user_email_from_request(request: Request):
 	ck = _parse_cookies_from_header(request.headers.get('cookie', ''))
 	session = ck.get('session', '')
@@ -84,6 +145,9 @@ def _current_user_email_from_request(request: Request):
 			user_response = supabase.auth.get_user(session)
 			user = getattr(user_response, 'user', None)
 			email, _ = _register_authenticated_user(user)
+			employee = _supabase_employee_for_user(_user_value(user, 'id'), session)
+			if employee:
+				EMPLOYEES[email] = {'profile': _profile_view(employee), 'attendance': [], 'leaves': [], 'payroll': {}}
 			if email:
 				return email
 		except Exception:
@@ -303,6 +367,20 @@ async def get_signup(request: Request):
 	return RedirectResponse(url='/')
 
 
+
+@app.get('/auth/signup.html', response_class=HTMLResponse)
+async def get_auth_signup(request: Request):
+	if os.path.isfile('auth/signup.html'):
+		return FileResponse('auth/signup.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/auth/signin.html', response_class=HTMLResponse)
+async def get_auth_signin(request: Request):
+	if os.path.isfile('auth/signin.html'):
+		return FileResponse('auth/signin.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
 @app.get('/auth.css')
 async def get_auth_css():
 	if os.path.isfile('auth/auth.css'):
@@ -319,9 +397,11 @@ async def get_auth_js():
 
 @app.get('/auth/signin.html')
 async def get_signin_page():
+
 	if os.path.isfile('auth/signin.html'):
 		return FileResponse('auth/signin.html', media_type='text/html')
 	raise HTTPException(status_code=404)
+
 
 
 @app.get('/auth/signup.html')
@@ -345,6 +425,7 @@ async def get_auth_script():
 	raise HTTPException(status_code=404)
 
 
+
 @app.post('/api/login')
 async def api_login(request: Request, response: Response):
 	try:
@@ -365,6 +446,11 @@ async def api_login(request: Request, response: Response):
 			if not user or not access_token:
 				raise ValueError('Supabase did not return a session')
 			email, role = _register_authenticated_user(user)
+			employee = _supabase_employee_for_user(_user_value(user, 'id'), access_token)
+			if not employee:
+				raise LookupError('Authenticated user has no employee profile')
+			EMPLOYEES[email] = {'profile': _profile_view(employee), 'attendance': [], 'leaves': [], 'payroll': {}}
+			role = _normalize_role(employee.get('role') or role)
 		except Exception:
 			raise HTTPException(status_code=401, detail='Invalid email or password')
 	else:
@@ -381,6 +467,13 @@ async def api_login(request: Request, response: Response):
 	result.set_cookie(key='session', value=access_token, path='/', httponly=True, samesite='lax', secure=bool(SUPABASE_URL))
 	return result
 
+
+
+@app.post('/api/logout')
+async def api_logout(request: Request):
+	result = JSONResponse({'message': 'Signed out'})
+	result.delete_cookie(key='session', path='/')
+	return result
 
 @app.post('/api/signup')
 async def api_signup(request: Request):
@@ -418,6 +511,7 @@ async def api_signup(request: Request):
 	USERS[email] = {'password': password, 'role': role, 'active': True}
 	EMPLOYEES[email] = {'profile': {'name': name, 'email': email, 'phone': phone, 'address': '', 'job_title': '', 'department': company}, 'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None}}
 	return JSONResponse({'message': 'Account created successfully. Please verify your email to continue.'}, status_code=201)
+
 
 
 @app.get('/admin-spa')
@@ -577,6 +671,15 @@ async def api_admin_users(request: Request):
 	caller = _current_user_email_from_request(request)
 	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
+	if supabase:
+		client = get_supabase_admin_client()
+		if client is None:
+			raise HTTPException(status_code=503, detail='Admin data access is not configured')
+		try:
+			result = client.table('employees').select('*').execute()
+			return JSONResponse([{'email': row.get('email'), 'role': _normalize_role(row.get('role')), 'profile': _profile_view(row)} for row in (result.data or [])])
+		except Exception:
+			raise HTTPException(status_code=503, detail='Unable to load employee records')
 	users = []
 	for email, meta in USERS.items():
 		entry = {'email': email, 'role': _normalize_role(meta.get('role'))}
@@ -657,6 +760,8 @@ async def api_admin_payroll_runs(request: Request):
 async def api_profile(request: Request):
 	email = _current_user_email_from_request(request)
 	if not email or email not in EMPLOYEES:
+		if supabase:
+			raise HTTPException(status_code=409, detail='Your account is authenticated, but your employee profile could not be found. Please contact HR.')
 		raise HTTPException(status_code=403)
 	return JSONResponse(EMPLOYEES[email]['profile'])
 
@@ -670,6 +775,25 @@ async def api_profile_update(request: Request):
 		body = await request.json()
 	except Exception:
 		raise HTTPException(status_code=400, detail='Invalid request')
+
+	updates = {key: str(body[key]).strip() for key in ('phone', 'address') if key in body}
+	if supabase:
+		user, token = _supabase_user_for_request(request)
+		if not user or not token:
+			raise HTTPException(status_code=401, detail='Session expired')
+		employee = _supabase_employee_for_user(_user_value(user, 'id'), token)
+		if not employee:
+			raise HTTPException(status_code=409, detail='Employee profile not found')
+		client = get_supabase_admin_client()
+		if client is None:
+			client = create_client(SUPABASE_URL, SUPABASE_KEY)
+			client.postgrest.auth(token)
+		client.table('employees').update(updates).eq('auth_user_id', _user_value(user, 'id')).execute()
+		EMPLOYEES[email]['profile'].update(updates)
+	else:
+		EMPLOYEES[email]['profile'].update(updates)
+	return JSONResponse(EMPLOYEES[email]['profile'])
+
 	profile = EMPLOYEES[email]['profile']
 	for field in ('phone', 'address'):
 		if field in body:
@@ -677,11 +801,33 @@ async def api_profile_update(request: Request):
 	return JSONResponse(profile)
 
 
+
 @app.get('/api/attendance')
 async def api_attendance(request: Request):
 	email = _current_user_email_from_request(request)
 	if not email or email not in EMPLOYEES:
 		raise HTTPException(status_code=403)
+	if supabase:
+		user, token = _supabase_user_for_request(request)
+		if not user or not token:
+			raise HTTPException(status_code=401, detail='Session expired')
+		employee = _supabase_employee_for_user(_user_value(user, 'id'), token)
+		if not employee:
+			raise HTTPException(status_code=409, detail='Employee profile not found')
+		client = get_supabase_admin_client()
+		if client is None:
+			client = create_client(SUPABASE_URL, SUPABASE_KEY)
+			client.postgrest.auth(token)
+		result = client.table('attendance').select('*').eq('employee_id', employee['id']).execute()
+		records = []
+		for r in result.data:
+			records.append({
+				'date': r.get('attendance_date'),
+				'checkin': r.get('check_in'),
+				'checkout': r.get('check_out'),
+				'status': r.get('status') or 'Present'
+			})
+		return JSONResponse(records)
 	return JSONResponse(EMPLOYEES[email]['attendance'])
 
 
@@ -758,6 +904,38 @@ async def api_attendance_checkin(request: Request):
 		raise HTTPException(status_code=403)
 	today = date.today().isoformat()
 	now = datetime.now(timezone.utc).isoformat()
+	
+	if supabase:
+		user, token = _supabase_user_for_request(request)
+		if not user or not token:
+			raise HTTPException(status_code=401, detail='Session expired')
+		employee = _supabase_employee_for_user(_user_value(user, 'id'), token)
+		if not employee:
+			raise HTTPException(status_code=409, detail='Employee profile not found')
+		client = get_supabase_admin_client()
+		if client is None:
+			client = create_client(SUPABASE_URL, SUPABASE_KEY)
+			client.postgrest.auth(token)
+		
+		result = client.table('attendance').select('*').eq('employee_id', employee['id']).eq('attendance_date', today).limit(1).execute()
+		if result.data:
+			raise HTTPException(status_code=400, detail='You have already checked in today.')
+			
+		entry_db = {
+			'employee_id': employee['id'],
+			'attendance_date': today,
+			'check_in': now,
+			'status': 'Present'
+		}
+		result = client.table('attendance').insert(entry_db).execute()
+		r = result.data[0]
+		return JSONResponse({
+			'date': r.get('attendance_date'),
+			'checkin': r.get('check_in'),
+			'checkout': r.get('check_out'),
+			'status': r.get('status')
+		})
+
 	att = EMPLOYEES[email]['attendance']
 	entry = next((x for x in att if x['date'] == today), None)
 	if not entry:
@@ -775,6 +953,44 @@ async def api_attendance_checkout(request: Request):
 		raise HTTPException(status_code=403)
 	today = date.today().isoformat()
 	now = datetime.now(timezone.utc).isoformat()
+	
+	if supabase:
+		user, token = _supabase_user_for_request(request)
+		if not user or not token:
+			raise HTTPException(status_code=401, detail='Session expired')
+		employee = _supabase_employee_for_user(_user_value(user, 'id'), token)
+		if not employee:
+			raise HTTPException(status_code=409, detail='Employee profile not found')
+		client = get_supabase_admin_client()
+		if client is None:
+			client = create_client(SUPABASE_URL, SUPABASE_KEY)
+			client.postgrest.auth(token)
+			
+		result = client.table('attendance').select('*').eq('employee_id', employee['id']).eq('attendance_date', today).limit(1).execute()
+		if not result.data:
+			raise HTTPException(status_code=400, detail='Please check in first.')
+		
+		record = result.data[0]
+		if record.get('check_out'):
+			raise HTTPException(status_code=400, detail='You have already checked out today.')
+			
+		check_in_time = datetime.fromisoformat(record['check_in'].replace('Z', '+00:00'))
+		check_out_time = datetime.fromisoformat(now.replace('Z', '+00:00'))
+		working_hours = (check_out_time - check_in_time).total_seconds() / 3600.0
+		
+		updates = {
+			'check_out': now,
+			'working_hours': round(working_hours, 2)
+		}
+		update_result = client.table('attendance').update(updates).eq('id', record['id']).execute()
+		r = update_result.data[0]
+		return JSONResponse({
+			'date': r.get('attendance_date'),
+			'checkin': r.get('check_in'),
+			'checkout': r.get('check_out'),
+			'status': r.get('status')
+		})
+
 	att = EMPLOYEES[email]['attendance']
 	entry = next((x for x in att if x['date'] == today), None)
 	if not entry:
