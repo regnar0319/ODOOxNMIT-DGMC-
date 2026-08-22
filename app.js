@@ -267,30 +267,60 @@ function renderDashboardView() {
 }
 
 function renderAttendanceView() {
-  pageContent.innerHTML = `
-    <section class="card panel-card table-card">
-      <div class="panel-header">
-        <div>
-          <h3>Attendance Records</h3>
-          <small>Track and manage employee attendance.</small>
-        </div>
-        <button type="button" class="secondary-button">Filter</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Employee</th><th>Date</th><th>Check-in</th><th>Check-out</th><th>Hours</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Amelia Moore</td><td>22 Aug 2026</td><td>08:52</td><td>17:34</td><td>8.7h</td><td><span class="pill success">Present</span></td></tr>
-            <tr><td>Rita Patel</td><td>22 Aug 2026</td><td>09:10</td><td>18:02</td><td>8.8h</td><td><span class="pill success">Present</span></td></tr>
-            <tr><td>Daniel Reed</td><td>22 Aug 2026</td><td>—</td><td>—</td><td>0h</td><td><span class="pill danger">Absent</span></td></tr>
-            <tr><td>Grace Kim</td><td>22 Aug 2026</td><td>09:04</td><td>13:10</td><td>4.1h</td><td><span class="pill warning">Half-day</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  `;
+  const today = new Date();
+  const todayKey = today.toISOString().slice(0, 10);
+  const demoRows = [
+    { name: 'Amelia Moore', email: 'amelia.moore@dayflow.com', date: todayKey, checkin: '08:52', checkout: '17:34', status: 'Present' },
+    { name: 'Rita Patel', email: 'rita.patel@dayflow.com', date: todayKey, checkin: '09:10', checkout: '18:02', status: 'Present' },
+    { name: 'Daniel Reed', email: 'daniel.reed@dayflow.com', date: todayKey, checkin: '--', checkout: '--', status: 'Absent' },
+    { name: 'Grace Kim', email: 'grace.kim@dayflow.com', date: todayKey, checkin: '09:04', checkout: '13:10', status: 'Half-day' },
+    { name: 'Noah Williams', email: 'noah.williams@dayflow.com', date: todayKey, checkin: '08:41', checkout: null, status: 'Present' },
+    { name: 'Sofia Mensah', email: 'sofia.mensah@dayflow.com', date: todayKey, checkin: '--', checkout: '--', status: 'Leave' }
+  ];
+  const rows = demoRows;
+  const formatDate = (value) => value === todayKey ? `Today, ${today.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const formatTime = (value) => value && value !== '--' ? new Date(`${todayKey}T${value}`).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '--';
+  const duration = (row) => {
+    if (!row.checkin || row.checkin === '--') return 0;
+    const start = new Date(`${row.date}T${row.checkin}`);
+    const end = row.checkout && row.checkout !== '--' ? new Date(`${row.date}T${row.checkout}`) : new Date();
+    return Math.max(0, (end - start) / 3600000);
+  };
+  const initials = (name) => name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+  const escape = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+  const statusClass = (value) => value.toLowerCase().replace('-', '');
+  const render = (filteredRows, page = 1, view = 'daily') => {
+    const pageSize = 5;
+    const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+    const safePage = Math.min(page, pageCount);
+    const visibleRows = filteredRows.slice((safePage - 1) * pageSize, safePage * pageSize);
+    pageContent.innerHTML = `
+      <section class="attendance-page">
+        <div class="attendance-heading"><div><p class="eyebrow">People operations</p><h2>Attendance</h2><p>Review attendance, hours, and overtime across your team.</p></div><button type="button" class="primary-button" id="export-attendance">↓ &nbsp; Export report</button></div>
+        <section class="card attendance-card">
+          <div class="attendance-toolbar"><div class="attendance-search"><span>⌕</span><input id="attendance-search" type="search" placeholder="Search employee name or email" aria-label="Search attendance"></div><input id="attendance-date" type="date" value="${todayKey}" aria-label="Filter by date"><select id="attendance-status" aria-label="Filter by status"><option value="All">All statuses</option><option>Present</option><option>Absent</option><option>Half-day</option><option>Leave</option></select><div class="segmented attendance-view"><button type="button" class="${view === 'daily' ? 'active' : ''}" data-view="daily">Daily</button><button type="button" class="${view === 'weekly' ? 'active' : ''}" data-view="weekly">Weekly</button></div></div>
+          <div class="attendance-summary"><span><b>${filteredRows.length}</b> records</span><span><i class="summary-dot present"></i>${filteredRows.filter((row) => row.status === 'Present').length} present</span><span><i class="summary-dot absent"></i>${filteredRows.filter((row) => row.status === 'Absent').length} absent</span><span><i class="summary-dot leave"></i>${filteredRows.filter((row) => row.status === 'Leave').length} on leave</span></div>
+          <div class="table-wrap"><table class="attendance-table"><thead><tr><th>Date</th><th>Employee</th><th>Check-in</th><th>Check-out</th><th>Working time</th><th>Extra time</th><th>Status</th></tr></thead><tbody>${visibleRows.map((row) => { const hours = duration(row); const extra = Math.max(0, hours - 8); return `<tr><td><strong>${formatDate(row.date)}</strong></td><td><div class="attendance-employee"><span class="attendance-avatar">${initials(row.name)}</span><span><strong>${escape(row.name)}</strong><small>${escape(row.email)}</small></span></div></td><td class="time-cell">${formatTime(row.checkin)}</td><td class="time-cell ${!row.checkout || row.checkout === '--' ? 'active-time' : ''}">${row.checkout ? formatTime(row.checkout) : 'Active'}</td><td><strong>${hours ? `${hours.toFixed(1)}h` : '--'}</strong></td><td>${extra ? `<strong class="overtime">+${extra.toFixed(1)}h</strong>` : '<span class="muted-cell">--</span>'}</td><td><span class="pill ${statusClass(row.status)}">${escape(row.status)}</span></td></tr>`; }).join('') || '<tr><td class="empty" colspan="7">No attendance records match these filters.</td></tr>'}</tbody></table></div>
+          <div class="attendance-footer"><span>Showing ${visibleRows.length ? (safePage - 1) * pageSize + 1 : 0}–${Math.min(safePage * pageSize, filteredRows.length)} of ${filteredRows.length}</span><div class="pagination"><button type="button" id="previous-page" ${safePage === 1 ? 'disabled' : ''}>←</button><span>Page ${safePage} of ${pageCount}</span><button type="button" id="next-page" ${safePage === pageCount ? 'disabled' : ''}>→</button></div></div>
+        </section>
+      </section>`;
+    const search = document.getElementById('attendance-search');
+    const date = document.getElementById('attendance-date');
+    const status = document.getElementById('attendance-status');
+    const applyFilters = () => {
+      const query = search.value.toLowerCase();
+      const selectedDate = date.value;
+      const selectedStatus = status.value;
+      const filtered = rows.filter((row) => (view === 'weekly' || !selectedDate || row.date === selectedDate) && (selectedStatus === 'All' || row.status === selectedStatus) && `${row.name} ${row.email}`.toLowerCase().includes(query));
+      render(filtered, 1, view);
+    };
+    search.addEventListener('input', applyFilters); date.addEventListener('change', applyFilters); status.addEventListener('change', applyFilters);
+    document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => render(rows, 1, button.dataset.view)));
+    document.getElementById('previous-page').addEventListener('click', () => render(filteredRows, safePage - 1, view));
+    document.getElementById('next-page').addEventListener('click', () => render(filteredRows, safePage + 1, view));
+    document.getElementById('export-attendance').addEventListener('click', () => showToast('Attendance report export started.'));
+  };
+  render(rows);
 }
 
 function renderTimeOffView() {

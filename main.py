@@ -276,11 +276,11 @@ async def get_root(request: Request):
 	return HTMLResponse(content=PAGE)
 
 
-@app.get('/signup', response_class=HTMLResponse)
+@app.get('/signup')
 async def get_signup(request: Request):
-	if os.path.isfile('signup.html'):
-		return FileResponse('signup.html', media_type='text/html')
-	raise HTTPException(status_code=404)
+	# Signup page removed; redirect to sign-in root which contains the sign-up flow link
+	from fastapi.responses import RedirectResponse
+	return RedirectResponse(url='/')
 
 
 @app.post('/api/login')
@@ -332,7 +332,7 @@ async def api_signup(request: Request):
 		raise HTTPException(status_code=400, detail='Invalid request')
 	if not company or not name or not email or not phone or not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', email):
 		raise HTTPException(status_code=400, detail='Please complete all fields')
-	if not re.fullmatch(r'[+0-9()\-\s]{7,20}', phone):
+	if not re.fullmatch(r'\+?[0-9()\-\s]{7,20}', phone):
 		raise HTTPException(status_code=400, detail='Please enter a valid phone number')
 	if not re.fullmatch(r'(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}', password):
 		raise HTTPException(status_code=400, detail='Password must contain at least 8 characters, an uppercase letter, a lowercase letter, a number, and a special character')
