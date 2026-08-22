@@ -3,4 +3,5 @@ uvicorn
 supabase
 psycopg2-binary
 python-dotenv
+email-validator
 # ... include your other dependencies here

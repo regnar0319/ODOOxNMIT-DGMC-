@@ -30,8 +30,10 @@ def get_supabase():
 # Provide an ASGI app so Render/uvicorn can import `main:app`.
 from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse
+from auth_router import router as auth_router
 
 app = FastAPI()
+app.include_router(auth_router)
 
 
 def _parse_cookies_from_header(cookie_header: str):
