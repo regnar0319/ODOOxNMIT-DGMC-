@@ -1,5 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+import re
 from urllib.parse import parse_qs, urlparse
 from http import cookies
 from datetime import datetime, date, timezone
@@ -43,7 +44,27 @@ def _parse_cookies_from_header(cookie_header: str):
 
 def _current_user_email_from_request(request: Request):
 	ck = _parse_cookies_from_header(request.headers.get('cookie', ''))
-	return ck.get('session')
+	session = ck.get('session', '')
+	if not session:
+		return None
+	if supabase and not session.endswith('@dayflow.com'):
+		try:
+			user_response = supabase.auth.get_user(session)
+			user = getattr(user_response, 'user', None)
+			email = getattr(user, 'email', None)
+			if email:
+				metadata = getattr(user, 'app_metadata', {}) or {}
+				role = metadata.get('role', 'employee')
+				USERS.setdefault(email.lower(), {'role': role, 'active': True})
+				if role == 'employee':
+					EMPLOYEES.setdefault(email.lower(), {
+						'profile': {'name': email.split('@')[0], 'email': email.lower(), 'phone': '', 'address': '', 'job_title': '', 'department': ''},
+						'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None},
+					})
+				return email.lower()
+		except Exception:
+			return None
+	return session
 
 
 HOST = "127.0.0.1"
@@ -184,7 +205,7 @@ PAGE = r'''<!doctype html>
 					<p class="message" id="form-message" role="alert"></p>
 					<button class="submit" id="submit-button" type="submit">Sign In</button>
 				</form>
-				<p class="signup">Don't have an account? <a class="text-link" href="#sign-up" id="signup-link">Sign Up</a></p>
+				<p class="signup">Don't have an account? <a class="text-link" href="/signup" id="signup-link">Sign Up</a></p>
 			</div>
 		</section>
 	</main>
@@ -211,38 +232,15 @@ PAGE = r'''<!doctype html>
 			else if (!email.validity.valid) { setMessage('email-message', 'Please enter a valid email.'); setInvalid('email-field', true); valid = false; }
 			if (!password.value) { setMessage('password-message', 'Please enter your password.'); setInvalid('password-field', true); valid = false; }
 			if (!valid) return;
-			session = ck.get('session', '')
-			if not session:
-				return None
-			if supabase and not session.endswith('@dayflow.com'):
-				try:
-					user_response = supabase.auth.get_user(session)
-					user = getattr(user_response, 'user', None)
-					email = getattr(user, 'email', None)
-					if email:
-						metadata = getattr(user, 'app_metadata', {}) or {}
-						role = metadata.get('role', 'employee')
-						USERS.setdefault(email.lower(), {'role': role, 'active': True})
-						if role == 'employee':
-							EMPLOYEES.setdefault(email.lower(), {
-								'profile': {'name': email.split('@')[0], 'email': email.lower(), 'phone': '', 'address': '', 'job_title': '', 'department': ''},
-								'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None},
-							})
-						return email.lower()
-				except Exception:
-					return None
-			return session
 			try {
 				const response = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: email.value.trim(), password: password.value}) });
 				const result = await response.json();
-				if (!response.ok) setMessage('form-message', result.error || 'Invalid email or password.');
 				if (!response.ok) setMessage('form-message', result.error || result.detail || 'Invalid email or password.');
 				else window.location.href = result.redirect;
 			} catch (_) { setMessage('form-message', 'Unable to sign in right now. Please try again.'); }
 			finally { submit.disabled = false; submit.textContent = 'Sign In'; }
 		});
 		document.getElementById('forgot-link').addEventListener('click', (event) => { event.preventDefault(); setMessage('form-message', 'Please contact your HR administrator to reset your password.'); });
-		document.getElementById('signup-link').addEventListener('click', (event) => { event.preventDefault(); setMessage('form-message', 'Account creation is managed by your Dayflow administrator.'); });
 	</script>
 </body>
 </html>'''
@@ -252,6 +250,13 @@ PAGE = r'''<!doctype html>
 @app.get('/', response_class=HTMLResponse)
 async def get_root(request: Request):
 	return HTMLResponse(content=PAGE)
+
+
+@app.get('/signup', response_class=HTMLResponse)
+async def get_signup(request: Request):
+	if os.path.isfile('signup.html'):
+		return FileResponse('signup.html', media_type='text/html')
+	raise HTTPException(status_code=404)
 
 
 @app.post('/api/login')
@@ -289,6 +294,39 @@ async def api_login(request: Request, response: Response):
 	result = JSONResponse({'redirect': redirect})
 	result.set_cookie(key='session', value=access_token, path='/', httponly=True, samesite='lax', secure=bool(SUPABASE_URL))
 	return result
+
+
+@app.post('/api/signup')
+async def api_signup(request: Request):
+	try:
+		body = await request.json()
+		company = str(body.get('company', '')).strip()
+		name = str(body.get('name', '')).strip()
+		email = str(body.get('email', '')).strip().lower()
+		phone = str(body.get('phone', '')).strip()
+		password = str(body.get('password', ''))
+		confirm_password = str(body.get('confirm_password', ''))
+	except Exception:
+		raise HTTPException(status_code=400, detail='Invalid request')
+	if not company or not name or not email or not phone or not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', email):
+		raise HTTPException(status_code=400, detail='Please complete all fields')
+	if not re.fullmatch(r'[+0-9()\-\s]{7,20}', phone):
+		raise HTTPException(status_code=400, detail='Please enter a valid phone number')
+	if not re.fullmatch(r'(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}', password):
+		raise HTTPException(status_code=400, detail='Password must contain at least 8 characters, an uppercase letter, a lowercase letter, a number, and a special character')
+	if password != confirm_password:
+		raise HTTPException(status_code=400, detail='Passwords do not match.')
+	if supabase:
+		try:
+			supabase.auth.sign_up({'email': email, 'password': password, 'options': {'data': {'name': name, 'company': company, 'phone': phone}, 'email_redirect_to': None}})
+		except Exception:
+			raise HTTPException(status_code=400, detail='Unable to create account. The email may already be registered.')
+		return JSONResponse({'message': 'Account created successfully. Please verify your email to continue.'}, status_code=201)
+	if email in USERS:
+		raise HTTPException(status_code=409, detail='An account with this email already exists')
+	USERS[email] = {'password': password, 'role': 'employee', 'active': True}
+	EMPLOYEES[email] = {'profile': {'name': name, 'email': email, 'phone': phone, 'address': '', 'job_title': '', 'department': company}, 'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None}}
+	return JSONResponse({'message': 'Account created successfully. Please verify your email to continue.'}, status_code=201)
 
 
 @app.get('/admin-spa')
