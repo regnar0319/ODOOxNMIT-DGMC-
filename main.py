@@ -282,14 +282,31 @@ PAGE = r'''<!doctype html>
 
 @app.get('/', response_class=HTMLResponse)
 async def get_root(request: Request):
+	if os.path.isfile('auth/signin.html'):
+		return FileResponse('auth/signin.html', media_type='text/html')
 	return HTMLResponse(content=PAGE)
 
 
 @app.get('/signup')
 async def get_signup(request: Request):
-	# Signup page removed; redirect to sign-in root which contains the sign-up flow link
+	if os.path.isfile('auth/signup.html'):
+		return FileResponse('auth/signup.html', media_type='text/html')
 	from fastapi.responses import RedirectResponse
 	return RedirectResponse(url='/')
+
+
+@app.get('/auth.css')
+async def get_auth_css():
+	if os.path.isfile('auth/auth.css'):
+		return FileResponse('auth/auth.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/auth.js')
+async def get_auth_js():
+	if os.path.isfile('auth/auth.js'):
+		return FileResponse('auth/auth.js', media_type='application/javascript')
+	raise HTTPException(status_code=404)
 
 
 @app.post('/api/login')
@@ -333,17 +350,18 @@ async def api_login(request: Request, response: Response):
 async def api_signup(request: Request):
 	try:
 		body = await request.json()
+		employee_id = str(body.get('employee_id', '')).strip()
 		company = str(body.get('company', '')).strip()
-		name = str(body.get('name', '')).strip()
+		name = str(body.get('name', '')).strip() or employee_id
 		email = str(body.get('email', '')).strip().lower()
 		phone = str(body.get('phone', '')).strip()
 		password = str(body.get('password', ''))
 		confirm_password = str(body.get('confirm_password', ''))
 	except Exception:
 		raise HTTPException(status_code=400, detail='Invalid request')
-	if not company or not name or not email or not phone or not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', email):
-		raise HTTPException(status_code=400, detail='Please complete all fields')
-	if not re.fullmatch(r'\+?[0-9()\-\s]{7,20}', phone):
+	if not employee_id or not email or not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', email):
+		raise HTTPException(status_code=400, detail='Please complete all required fields')
+	if phone and not re.fullmatch(r'\+?[0-9()\-\s]{7,20}', phone):
 		raise HTTPException(status_code=400, detail='Please enter a valid phone number')
 	if not re.fullmatch(r'(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}', password):
 		raise HTTPException(status_code=400, detail='Password must contain at least 8 characters, an uppercase letter, a lowercase letter, a number, and a special character')
@@ -351,7 +369,7 @@ async def api_signup(request: Request):
 		raise HTTPException(status_code=400, detail='Passwords do not match.')
 	if supabase:
 		try:
-			supabase.auth.sign_up({'email': email, 'password': password, 'options': {'data': {'name': name, 'company': company, 'phone': phone}, 'email_redirect_to': None}})
+			supabase.auth.sign_up({'email': email, 'password': password, 'options': {'data': {'employee_id': employee_id, 'name': name, 'company': company, 'phone': phone, 'role': 'employee'}, 'email_redirect_to': None}})
 		except Exception:
 			raise HTTPException(status_code=400, detail='Unable to create account. The email may already be registered.')
 		return JSONResponse({'message': 'Account created successfully. Please verify your email to continue.'}, status_code=201)
@@ -393,6 +411,13 @@ async def get_admin_css():
 async def get_dashboard_css():
 	if os.path.isfile('dashboard.css'):
 		return FileResponse('dashboard.css', media_type='text/css')
+	raise HTTPException(status_code=404)
+
+
+@app.get('/dashboard.js')
+async def get_dashboard_js():
+	if os.path.isfile('dashboard.js'):
+		return FileResponse('dashboard.js', media_type='application/javascript')
 	raise HTTPException(status_code=404)
 
 

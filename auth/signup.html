@@ -2,46 +2,91 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Sign Up — Dayflow</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root {
-            --df-green: #144a37;
-            --df-cream: #f5f7f4
-        }
-
-        body {
-            background: var(--df-cream);
-            font-family: Inter, system-ui
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create Account | Dayflow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="auth.css">
 </head>
 
-<body class="min-h-screen grid grid-cols-1 lg:grid-cols-12">
-    <aside class="hidden lg:block lg:col-span-5 bg-[#11472f] text-white p-12">
-        <div class="max-w-md">
-            <h2 class="text-3xl font-serif mb-2">Create your account</h2>
-            <p class="opacity-90">Sign up and verify your email to get secure access to employee tools, time tracking
-                and payroll.</p>
-        </div>
-    </aside>
-    <main class="col-span-1 lg:col-span-7 flex items-center justify-center p-8">
-        <div class="w-full max-w-md">
-            <form id="signup" class="bg-white rounded-lg shadow p-6 space-y-4" onsubmit="return false;"><label
-                    class="block text-sm">Employee ID<input id="emp"
-                        class="mt-2 w-full rounded border px-3 py-2"></label><label class="block text-sm">Email<input
-                        id="email" type="email" class="mt-2 w-full rounded border px-3 py-2"></label><label
-                    class="block text-sm">Password<input id="password" type="password"
-                        class="mt-2 w-full rounded border px-3 py-2"></label><button id="create"
-                    class="w-full py-3 rounded bg-[#11472f] text-white">Create account</button>
-                <p class="text-center text-sm text-slate-500">Already registered? <a href="/auth/signin.html"
-                        class="text-emerald-700">Sign in</a></p>
-            </form>
-        </div>
+<body data-page="signup">
+    <main class="auth-shell">
+        <aside class="brand-panel">
+            <div class="brand"><span class="brand-mark" aria-hidden="true">d</span><span>dayflow.</span></div>
+            <div class="brand-content">
+                <p class="eyebrow">Human resource management</p>
+                <h1>Every workday, perfectly aligned.</h1>
+                <p class="brand-copy">One workspace for your people, attendance and time off.</p>
+                <div class="abstract-visual" aria-hidden="true"><i class="orbit orbit-a"></i><i
+                        class="orbit orbit-b"></i></div>
+            </div>
+            <div class="brand-footer"><i></i><span>Built for calm, capable teams</span></div>
+        </aside>
+        <section class="auth-panel" aria-labelledby="auth-title">
+            <div class="form-wrap">
+                <header class="form-header">
+                    <p class="eyebrow" style="color:var(--green-800)">Get started</p>
+                    <h2 id="auth-title">Create your account</h2>
+                    <p>Set up your Dayflow account and get started.</p>
+                </header>
+                <div class="auth-card">
+                    <form class="auth-form" novalidate>
+                        <div class="field"><label for="employee_id">Employee ID</label>
+                            <div class="input-wrap"><span class="input-icon" aria-hidden="true">#</span><input
+                                    id="employee_id" name="employee_id" autocomplete="off"
+                                    placeholder="Enter your employee ID" required></div>
+                            <p class="field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="field"><label for="email">Work Email</label>
+                            <div class="input-wrap"><span class="input-icon" aria-hidden="true">@</span><input
+                                    id="email" name="email" type="email" autocomplete="email"
+                                    placeholder="Enter your work email" required></div>
+                            <p class="field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="field"><label for="password">Password</label>
+                            <div class="input-wrap"><span class="input-icon" aria-hidden="true">*</span><input
+                                    id="password" name="password" type="password" autocomplete="new-password"
+                                    placeholder="Create a password" required><button class="password-toggle"
+                                    type="button" data-target="password" aria-label="Show password">Show</button></div>
+                            <div class="password-meter">
+                                <div class="meter-track" aria-hidden="true"><span class="meter-fill"></span></div>
+                                <ul class="requirements" aria-label="Password requirements">
+                                    <li data-requirement="length">8+ characters</li>
+                                    <li data-requirement="upper">Uppercase</li>
+                                    <li data-requirement="lower">Lowercase</li>
+                                    <li data-requirement="number">Number</li>
+                                    <li data-requirement="special">Special character</li>
+                                </ul>
+                            </div>
+                            <p class="field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="field"><label for="confirm_password">Confirm Password</label>
+                            <div class="input-wrap"><span class="input-icon" aria-hidden="true">*</span><input
+                                    id="confirm_password" name="confirm_password" type="password"
+                                    autocomplete="new-password" placeholder="Re-enter your password" required><button
+                                    class="password-toggle" type="button" data-target="confirm_password"
+                                    aria-label="Show confirmation password">Show</button></div>
+                            <p class="field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="field"><span class="field-label">Account Type</span>
+                            <div class="segmented"><input id="role-employee" type="radio" name="role" value="Employee"
+                                    checked><label for="role-employee">Employee</label><input id="role-hr" type="radio"
+                                    name="role" value="HR"><label for="role-hr">HR</label></div>
+                        </div>
+                        <label class="check-row"><input type="checkbox" name="terms" required><span>I agree to the <a
+                                    href="#">Terms &amp; Conditions</a> and <a href="#">Privacy
+                                    Policy</a>.</span></label>
+                        <div class="form-status" data-status role="alert" aria-live="polite"></div>
+                        <button class="primary-action" type="submit">Create Account</button>
+                    </form>
+                </div>
+                <p class="auth-switch">Already have an account? <a class="text-link" href="signin.html">Sign In</a></p>
+            </div>
+        </section>
     </main>
-    <script>document.getElementById('signup').addEventListener('submit', async (e) => { e.preventDefault(); const payload = { employee_id: document.getElementById('emp').value, email: document.getElementById('email').value, password: document.getElementById('password').value }; try { const res = await fetch('/api/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (res.ok) { alert('Account created — check email'); location = '/auth/signin.html'; } else { alert('Unable to create account') } } catch (err) { alert('Network error') } })</script>
+    <script src="auth.js" defer></script>
 </body>
 
 </html>
