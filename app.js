@@ -3,6 +3,7 @@ const profileData = {
   loginId: 'EMP001',
   email: 'admin@company.com',
   phone: '+91 98765 43210',
+  address: '',
   company: 'Dayflow Labs',
   department: 'Human Resources',
   manager: 'Daniel Sutton',
@@ -30,7 +31,7 @@ const secondaryActionButton = document.getElementById('header-secondary-action')
 
 const viewMeta = {
   dashboard: { label: 'Dashboard', description: 'Monitor operations, attendance, and HR activity at a glance.' },
-  profile: { label: 'My Profile', description: 'Keep your personal and professional information up to date.' },
+  profile: { label: 'My Profile', description: 'Manage your personal and professional information.' },
   attendance: { label: 'Attendance', description: 'Track and manage employee attendance across the organization.' },
   timeoff: { label: 'Time Off', description: 'Manage leave requests and time-off balances for your team.' },
   payroll: { label: 'Payroll', description: 'Review compensation, payroll activity, and salary records.' },
@@ -69,11 +70,12 @@ function updateHeader(viewKey) {
 }
 
 function renderProfileView() {
+  const displayValue = (value) => value || 'Not provided';
   pageContent.innerHTML = `
     <section class="profile-summary card profile-hero" aria-label="Profile summary">
       <div class="summary-main">
         <div class="profile-image-shell">
-          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=500&q=80" alt="Amelia Moore" />
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=500&q=80" alt="${profileData.name}" />
           <button type="button" class="image-edit" id="image-edit-button" aria-label="Edit profile picture">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Zm14.71-9.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.47 1.47 3.75 3.75 1.47-1.47Z"/></svg>
           </button>
@@ -92,7 +94,7 @@ function renderProfileView() {
               <strong><a href="mailto:${profileData.email}">${profileData.email}</a></strong>
             </div>
             <div class="meta-block"><span>Mobile</span>
-              <strong>${profileData.phone}</strong>
+              <strong>${displayValue(profileData.phone)}</strong>
             </div>
           </div>
         </div>
@@ -178,15 +180,17 @@ function renderProfileView() {
         </div>
 
         <div class="private-grid">
-          <div class="private-item"><span>Personal phone</span><strong id="private-phone">${profileData.phone}</strong></div>
-          <div class="private-item"><span>Address</span><strong id="private-address">14 Orchid Avenue, Banjara Hills, Hyderabad</strong></div>
+          <div class="private-item"><span>Full name</span><strong>${displayValue(profileData.name)}</strong></div>
+          <div class="private-item"><span>Personal email</span><strong>${displayValue(profileData.email)}</strong></div>
+          <div class="private-item"><span>Personal phone</span><strong id="private-phone">${displayValue(profileData.phone)}</strong></div>
+          <div class="private-item"><span>Address</span><strong id="private-address">Not provided</strong></div>
           <div class="private-item"><span>Emergency contact</span><strong id="private-emergency">Not provided</strong></div>
           <div class="private-item"><span>Personal information</span><strong id="private-notes">Not provided</strong></div>
         </div>
       </div>
     </section>
 
-    <section class="tab-panel" id="job-panel"><div class="private-card card"><div class="card-header single-row"><div><h3>Professional Information</h3><p>Employment details managed by your organisation.</p></div><span class="status-badge success">● Active</span></div><div class="private-grid"><div class="private-item"><span>Employee ID</span><strong>${profileData.loginId}</strong></div><div class="private-item"><span>Department</span><strong>${profileData.department}</strong></div><div class="private-item"><span>Designation</span><strong>People Operations Lead</strong></div><div class="private-item"><span>Manager</span><strong>${profileData.manager}</strong></div><div class="private-item"><span>Location</span><strong>${profileData.location}</strong></div><div class="private-item"><span>Joining date</span><strong>Not provided</strong></div></div></div></section>
+    <section class="tab-panel" id="job-panel"><div class="private-card card"><div class="card-header single-row"><div><h3>Professional Information</h3><p>Employment details managed by your organisation.</p></div><span class="status-badge success">● Active</span></div><div class="private-grid"><div class="private-item"><span>Employee ID</span><strong>${displayValue(profileData.loginId)}</strong></div><div class="private-item"><span>Department</span><strong>${displayValue(profileData.department)}</strong></div><div class="private-item"><span>Designation</span><strong>Not provided</strong></div><div class="private-item"><span>Manager</span><strong>${displayValue(profileData.manager)}</strong></div><div class="private-item"><span>Location</span><strong>${displayValue(profileData.location)}</strong></div><div class="private-item"><span>Joining date</span><strong>Not provided</strong></div><div class="private-item"><span>Employment status</span><strong class="text-success">Active</strong></div></div></div></section>
 
     <section class="tab-panel" id="salary-panel">
       <div class="salary-card card">
@@ -206,7 +210,7 @@ function renderProfileView() {
       </div>
     </section>
 
-    <section class="tab-panel" id="documents-panel"><div class="private-card card"><div class="card-header single-row"><div><h3>Documents</h3><p>Secure files belonging to your employee record.</p></div><span class="status-badge">No documents</span></div><div class="empty-state">No documents uploaded yet.</div></div></section>
+    <section class="tab-panel" id="documents-panel"><div class="private-card card"><div class="card-header single-row"><div><h3>Documents</h3><p>Secure files belonging to your employee record.</p></div><span class="status-badge">No documents</span></div><div class="empty-state"><strong>No documents uploaded</strong><p>Upload an employment or identity document when document storage is enabled.</p><button type="button" class="secondary-button" disabled>+ Upload Document</button></div></div></section>
   `;
 
   renderSkills();
@@ -501,6 +505,7 @@ function syncProfileFields(formData) {
   profileData.loginId = formData.get('loginId');
   profileData.email = formData.get('email');
   profileData.phone = formData.get('mobile');
+  profileData.address = formData.get('address');
   profileData.company = formData.get('company');
   profileData.department = formData.get('department');
   profileData.manager = formData.get('manager');
@@ -525,6 +530,9 @@ function syncProfileFields(formData) {
 
   const privatePhone = document.getElementById('private-phone');
   if (privatePhone) privatePhone.textContent = profileData.phone;
+
+  const privateAddress = document.getElementById('private-address');
+  if (privateAddress) privateAddress.textContent = profileData.address || 'Not provided';
 
   const aboutText = document.getElementById('about-text');
   if (aboutText) aboutText.textContent = profileData.about;
