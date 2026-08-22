@@ -43,7 +43,21 @@ def _parse_cookies_from_header(cookie_header: str):
 
 def _current_user_email_from_request(request: Request):
 	ck = _parse_cookies_from_header(request.headers.get('cookie', ''))
-	return ck.get('session')
+	# cookie first
+	email = ck.get('session')
+	if email:
+		return email
+	# Authorization: Bearer <email> (convenience for API clients)
+	auth = request.headers.get('authorization') or request.headers.get('Authorization')
+	if auth:
+		parts = auth.split()
+		if len(parts) == 2 and parts[0].lower() == 'bearer':
+			return parts[1]
+	# fallback to query param `session` for very simple clients
+	q = request.query_params
+	if 'session' in q:
+		return q.get('session')
+	return None
 
 
 HOST = "127.0.0.1"
@@ -286,7 +300,7 @@ async def api_login(request: Request, response: Response):
 		access_token = email
 
 	redirect = '/employee-dashboard' if role == 'employee' else '/admin-dashboard'
-	result = JSONResponse({'redirect': redirect})
+	result = JSONResponse({'redirect': redirect, 'session': access_token})
 	result.set_cookie(key='session', value=access_token, path='/', httponly=True, samesite='lax', secure=bool(SUPABASE_URL))
 	return result
 
@@ -454,20 +468,6 @@ async def api_admin_update_user(target: str, request: Request):
 		EMPLOYEES[target]['profile'].update(body['profile'])
 	return JSONResponse({'email': target})
 
-
-@app.post('/api/profile')
-async def api_profile_update(request: Request):
-	email = _current_user_email_from_request(request)
-	if not email or email not in EMPLOYEES:
-		raise HTTPException(status_code=403)
-	try:
-		body = await request.json()
-	except Exception:
-		raise HTTPException(status_code=400)
-	for k in ('phone', 'address'):
-		if k in body:
-			EMPLOYEES[email]['profile'][k] = body[k]
-	return JSONResponse(EMPLOYEES[email]['profile'])
 
 
 @app.post('/api/attendance/checkin')
