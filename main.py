@@ -51,6 +51,15 @@ def _normalize_role(role):
 	return 'employee'
 
 
+def _normalized_user_role(email):
+	if email not in USERS:
+		return None
+	role = _normalize_role(USERS[email].get('role'))
+	USERS[email]['role'] = role
+	USERS[email].setdefault('active', True)
+	return role
+
+
 def _register_authenticated_user(user):
 	email = (getattr(user, 'email', None) or '').strip().lower()
 	if not email:
@@ -96,8 +105,8 @@ PORT = 8000
 
 # Demo identities keep the standalone prototype usable without a database.
 USERS = {
-		"employee@dayflow.com": {"password": "Employee@123", "role": "employee"},
-		"hr@dayflow.com": {"password": "HrAdmin@123", "role": "hr"},
+	"employee@dayflow.com": {"password": "Employee@123", "role": "employee", "active": True},
+	"hr@dayflow.com": {"password": "HrAdmin@123", "role": "hr", "active": True},
 }
 
 # Demo employee records (in-memory prototype)
@@ -309,7 +318,9 @@ async def api_login(request: Request, response: Response):
 		user = USERS.get(email)
 		if not user or user.get('password') != password or user.get('active') is False:
 			raise HTTPException(status_code=401, detail='Invalid email or password')
-		role = user.get('role', 'employee')
+		role = _normalize_role(user.get('role', 'employee'))
+		user['role'] = role
+		user.setdefault('active', True)
 		access_token = email
 
 	redirect = '/employee-spa' if role == 'employee' else '/admin-spa'
@@ -354,7 +365,7 @@ async def api_signup(request: Request):
 @app.get('/admin-spa')
 async def get_admin_spa(request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	if os.path.isfile('admin_mockup.html'):
 		return FileResponse('admin_mockup.html', media_type='text/html')
@@ -364,7 +375,7 @@ async def get_admin_spa(request: Request):
 @app.get('/employee-spa')
 async def get_employee_spa(request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'employee':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'employee':
 		raise HTTPException(status_code=403)
 	if os.path.isfile('employee_spa.html'):
 		return FileResponse('employee_spa.html', media_type='text/html')
@@ -388,11 +399,11 @@ async def get_dashboard_css():
 @app.get('/api/admin/users')
 async def api_admin_users(request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	users = []
 	for email, meta in USERS.items():
-		entry = {'email': email, 'role': meta.get('role')}
+		entry = {'email': email, 'role': _normalize_role(meta.get('role'))}
 		if email in EMPLOYEES:
 			entry['profile'] = EMPLOYEES[email]['profile']
 		users.append(entry)
@@ -402,11 +413,11 @@ async def api_admin_users(request: Request):
 @app.get('/api/admin/users/{target_email}')
 async def api_admin_get_user(target_email: str, request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	if target_email not in USERS:
 		raise HTTPException(status_code=404)
-	resp = {'email': target_email, 'role': USERS[target_email].get('role')}
+	resp = {'email': target_email, 'role': _normalize_role(USERS[target_email].get('role'))}
 	if target_email in EMPLOYEES:
 		resp.update({
 			'profile': EMPLOYEES[target_email]['profile'],
@@ -420,7 +431,7 @@ async def api_admin_get_user(target_email: str, request: Request):
 @app.get('/api/admin/attendance')
 async def api_admin_attendance(request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	summary = {e: EMPLOYEES[e]['attendance'] for e in EMPLOYEES}
 	return JSONResponse(summary)
@@ -429,7 +440,7 @@ async def api_admin_attendance(request: Request):
 @app.get('/api/admin/leave/requests')
 async def api_admin_leaves(request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	summary = {e: EMPLOYEES[e]['leaves'] for e in EMPLOYEES}
 	return JSONResponse(summary)
@@ -438,7 +449,7 @@ async def api_admin_leaves(request: Request):
 @app.post('/api/admin/leave/{target_email}/{leave_id}/decision')
 async def api_admin_leave_decision(target_email: str, leave_id: str, request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	if target_email not in EMPLOYEES:
 		raise HTTPException(status_code=404)
@@ -446,9 +457,10 @@ async def api_admin_leave_decision(target_email: str, leave_id: str, request: Re
 		body = await request.json()
 	except Exception:
 		raise HTTPException(status_code=400, detail='Invalid request')
-	decision = body.get('status')
-	if decision not in ('Approved', 'Rejected'):
+	decision = str(body.get('status', '')).strip().lower()
+	if decision not in {'approved', 'rejected'}:
 		raise HTTPException(status_code=400, detail='Invalid decision')
+	decision = 'Approved' if decision == 'approved' else 'Rejected'
 	leave = next((item for item in EMPLOYEES[target_email]['leaves'] if item.get('id') == leave_id), None)
 	if not leave:
 		raise HTTPException(status_code=404, detail='Leave request not found')
@@ -460,7 +472,7 @@ async def api_admin_leave_decision(target_email: str, leave_id: str, request: Re
 @app.get('/api/admin/payroll/runs')
 async def api_admin_payroll_runs(request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	return JSONResponse([])
 
@@ -500,7 +512,7 @@ async def api_payroll(request: Request):
 @app.post('/api/admin/users')
 async def api_admin_create_user(request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	try:
 		body = await request.json()
@@ -511,19 +523,21 @@ async def api_admin_create_user(request: Request):
 		raise HTTPException(status_code=400, detail='missing email')
 	if target in USERS:
 		raise HTTPException(status_code=409, detail='user exists')
-	USERS[target] = {'password': body.get('password', 'TempPass123'), 'role': body.get('role', 'employee')}
-	if USERS[target]['role'] == 'employee':
+	role = _normalize_role(body.get('role', 'employee'))
+	USERS[target] = {'password': body.get('password', 'TempPass123'), 'role': role, 'active': True}
+	if role == 'employee':
 		EMPLOYEES[target] = {'profile': {'name': body.get('first_name', '') + ' ' + body.get('last_name', ''), 'email': target, 'phone': body.get('phone', ''), 'address': body.get('address', ''), 'job_title': body.get('job_title', ''), 'department': body.get('department', '')}, 'attendance': [], 'leaves': [], 'payroll': {'salary': body.get('salary', 0), 'currency': body.get('currency', 'USD'), 'last_payslip': None}}
-	return JSONResponse({'email': target, 'role': USERS[target]['role']}, status_code=201)
+	return JSONResponse({'email': target, 'role': role}, status_code=201)
 
 
 @app.post('/api/admin/users/{target}/deactivate')
 async def api_admin_deactivate_user(target: str, request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	if target not in USERS:
 		raise HTTPException(status_code=404)
+	USERS[target].setdefault('active', True)
 	USERS[target]['active'] = False
 	return JSONResponse({'email': target, 'active': False})
 
@@ -531,14 +545,14 @@ async def api_admin_deactivate_user(target: str, request: Request):
 @app.post('/api/admin/users/{target}/update')
 async def api_admin_update_user(target: str, request: Request):
 	caller = _current_user_email_from_request(request)
-	if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+	if not caller or caller not in USERS or _normalized_user_role(caller) != 'hr':
 		raise HTTPException(status_code=403)
 	try:
 		body = await request.json()
 	except Exception:
 		raise HTTPException(status_code=400)
 	if 'role' in body:
-		USERS[target]['role'] = body['role']
+		USERS[target]['role'] = _normalize_role(body['role'])
 	if target in EMPLOYEES and 'profile' in body:
 		EMPLOYEES[target]['profile'].update(body['profile'])
 	return JSONResponse({'email': target})
@@ -681,7 +695,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 				self.wfile.write(body)
 			elif path == "/employee-dashboard":
 				email = self._current_user_email()
-				if not email or email not in USERS or USERS[email]["role"] != "employee":
+				if not email or email not in USERS or _normalize_role(USERS[email].get('role')) != "employee":
 					self.send_error(403)
 					return
 				body = self.EMPLOYEE_DASH.encode('utf-8')
@@ -692,7 +706,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 				self.wfile.write(body)
 			elif path == "/admin-dashboard":
 				email = self._current_user_email()
-				if not email or email not in USERS or USERS[email].get('role') != 'hr':
+				if not email or email not in USERS or _normalize_role(USERS[email].get('role')) != 'hr':
 					self.send_error(403)
 					return
 				body = self.ADMIN_DASH.encode('utf-8')
@@ -704,7 +718,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 			elif path == '/admin-spa':
 				# serve the admin mockup SPA from disk (requires HR role)
 				email = self._current_user_email()
-				if not email or email not in USERS or USERS[email].get('role') != 'hr':
+				if not email or email not in USERS or _normalize_role(USERS[email].get('role')) != 'hr':
 					self.send_error(403)
 					return
 				try:
@@ -721,7 +735,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 			elif path == '/employee-spa' or path == '/employee_spa.html' or path == '/employee_spa':
 				# serve employee SPA (employee role required)
 				email = self._current_user_email()
-				if not email or email not in USERS or USERS[email].get('role') != 'employee':
+				if not email or email not in USERS or _normalize_role(USERS[email].get('role')) != 'employee':
 					self.send_error(403)
 					return
 				try:
@@ -753,7 +767,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 				if path.startswith('/api/admin/'):
 					# require hr role
 					caller = self._current_user_email()
-					if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+					if not caller or caller not in USERS or _normalize_role(USERS[caller].get('role')) != 'hr':
 						self._send_json(403, {'error':'forbidden'})
 						return
 					parts = path.split('/')
@@ -761,7 +775,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 					if path == '/api/admin/users':
 						users = []
 						for email, meta in USERS.items():
-							entry = {'email': email, 'role': meta.get('role')}
+							entry = {'email': email, 'role': _normalize_role(meta.get('role'))}
 							if email in EMPLOYEES:
 								entry['profile'] = EMPLOYEES[email]['profile']
 							users.append(entry)
@@ -773,7 +787,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 						if target not in USERS:
 							self._send_json(404, {'error':'not found'})
 							return
-						resp = {'email': target, 'role': USERS[target].get('role')}
+						resp = {'email': target, 'role': _normalize_role(USERS[target].get('role'))}
 						if target in EMPLOYEES:
 							resp['profile'] = EMPLOYEES[target]['profile']
 							resp['attendance'] = EMPLOYEES[target]['attendance']
@@ -852,9 +866,10 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 					self._send_json(400, {'error': 'Invalid request.'})
 					return
 				user = USERS.get(email)
-				if not user or user['password'] != password:
+				if not user or user.get('password') != password or user.get('active') is False:
 					self._send_json(401, {'error': 'Invalid email or password.'})
 					return
+				user['role'] = _normalize_role(user.get('role', 'employee'))
 				redirect = '/employee-dashboard' if user['role'] == 'employee' else '/admin-dashboard'
 				# set a simple session cookie (prototype only)
 				extra = {'Set-Cookie': f'session={email}; Path=/; HttpOnly'}
@@ -864,7 +879,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 			# Admin POST endpoints (HR role required)
 			if path.startswith('/api/admin/'):
 				caller = self._current_user_email()
-				if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+				if not caller or caller not in USERS or _normalize_role(USERS[caller].get('role')) != 'hr':
 					self._send_json(403, {'error':'forbidden'})
 					return
 				parts = path.split('/')
@@ -883,10 +898,11 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 					if target in USERS:
 						self._send_json(409, {'error':'user exists'})
 						return
-					USERS[target] = {'password': body.get('password','TempPass123'), 'role': body.get('role','employee')}
-					if USERS[target]['role'] == 'employee':
+					role = _normalize_role(body.get('role','employee'))
+					USERS[target] = {'password': body.get('password','TempPass123'), 'role': role, 'active': True}
+					if role == 'employee':
 						EMPLOYEES[target] = {'profile': {'name': body.get('first_name','') + ' ' + body.get('last_name',''), 'email': target, 'phone': body.get('phone',''), 'address': body.get('address',''), 'job_title': body.get('job_title',''), 'department': body.get('department','')}, 'attendance': [], 'leaves': [], 'payroll': {'salary': body.get('salary',0), 'currency': body.get('currency','USD'), 'last_payslip': None}}
-					self._send_json(201, {'email': target, 'role': USERS[target]['role']})
+					self._send_json(201, {'email': target, 'role': role})
 					return
 				# POST /api/admin/users/{email}/deactivate
 				if len(parts) >= 6 and parts[2] == 'admin' and parts[3] == 'users' and parts[5] == 'deactivate':
@@ -894,6 +910,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 					if target not in USERS:
 						self._send_json(404, {'error':'not found'})
 						return
+					USERS[target].setdefault('active', True)
 					USERS[target]['active'] = False
 					self._send_json(200, {'email': target, 'active': False})
 					return
@@ -908,7 +925,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 						return
 					# allow updating role or profile
 					if 'role' in body:
-						USERS[target]['role'] = body['role']
+						USERS[target]['role'] = _normalize_role(body['role'])
 					if target in EMPLOYEES and 'profile' in body:
 						EMPLOYEES[target]['profile'].update(body['profile'])
 					self._send_json(200, {'email': target})

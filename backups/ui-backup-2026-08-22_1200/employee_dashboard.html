@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Employee Dashboard — Dayflow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-50 min-h-screen text-slate-800">
+    <main class="max-w-6xl mx-auto p-6">
+        <header class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">Employee Dashboard</h1>
+            <div class="flex items-center gap-3">
+                <button onclick="location.href='/auth/signin.html'" class="text-sm text-indigo-600">Logout</button>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <a href="/profile.html" class="p-4 bg-white rounded shadow hover:shadow-md">
+                <h3 class="font-semibold">Profile</h3>
+                <p class="text-sm text-slate-500">View and edit basic info</p>
+            </a>
+            <a href="/attendance.html" class="p-4 bg-white rounded shadow hover:shadow-md">
+                <h3 class="font-semibold">Attendance</h3>
+                <p class="text-sm text-slate-500">Check-in / Check-out and history</p>
+            </a>
+            <a href="/leave.html" class="p-4 bg-white rounded shadow hover:shadow-md">
+                <h3 class="font-semibold">Leave Requests</h3>
+                <p class="text-sm text-slate-500">Apply for time off</p>
+            </a>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="col-span-2 p-4 bg-white rounded shadow">
+                <h2 class="font-semibold mb-2">Recent activity</h2>
+                <ul class="text-sm text-slate-600 space-y-2">
+                    <li>Checked in at 09:02 — Today</li>
+                    <li>Submitted leave request — 2026-08-15</li>
+                    <li>Updated phone number — 2026-08-01</li>
+                </ul>
+            </div>
+            <div class="p-4 bg-white rounded shadow">
+                <h2 class="font-semibold mb-2">Quick actions</h2>
+                <div class="space-y-2">
+                    <button onclick="location.href='/attendance.html'"
+                        class="w-full py-2 rounded bg-indigo-600 text-white">Check-in / Out</button>
+                    <button onclick="location.href='/leave.html'" class="w-full py-2 rounded border">Request
+                        leave</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</body>
+
+</html>

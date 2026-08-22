@@ -7,181 +7,54 @@
     <title>Sign In — Dayflow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom smooth focus and micro-interaction tweaks */
-        .glass {
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(6px);
+        :root {
+            --df-green: #144a37;
+            --df-cream: #f5f7f4
         }
 
-        .brand-accent {
-            background: linear-gradient(90deg, #0f172a, #1e293b);
-        }
-
-        .focus-ring:focus {
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
-        }
-
-        .spinner {
-            border-top-color: transparent;
+        body {
+            background: var(--df-cream);
+            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto
         }
     </style>
 </head>
 
-<body class="antialiased bg-slate-50 text-slate-800">
-    <div class="min-h-screen grid grid-cols-1 lg:grid-cols-12">
-        <!-- Illustration / Value panel -->
-        <aside class="hidden lg:block lg:col-span-5 brand-accent text-white p-12" aria-hidden="false"
-            aria-label="Marketing and product highlights">
-            <div class="max-w-md mx-auto">
-                <div class="flex items-center gap-3 mb-8">
-                    <div
-                        class="w-12 h-12 rounded-md bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center text-white font-bold">
-                        D</div>
-                    <div>
-                        <h1 class="text-2xl font-extrabold tracking-tight">Dayflow</h1>
-                        <p class="text-sm text-slate-200">Smart HR tools for modern teams</p>
-                    </div>
-                </div>
-
-                <h2 class="text-3xl font-bold leading-tight mb-4">Every workday, perfectly aligned</h2>
-                <p class="text-slate-200 mb-6">Manage employees, attendance, time off and payroll from one clean, secure
-                    workspace.</p>
-
-                <ul class="space-y-3 text-slate-100">
-                    <li class="flex items-start gap-3"><span
-                            class="w-2 h-2 mt-2 rounded-full bg-emerald-300"></span><span class="text-sm">Employee
-                            directory & roles</span></li>
-                    <li class="flex items-start gap-3"><span
-                            class="w-2 h-2 mt-2 rounded-full bg-emerald-300"></span><span class="text-sm">Attendance &
-                            mobile check-in</span></li>
-                    <li class="flex items-start gap-3"><span
-                            class="w-2 h-2 mt-2 rounded-full bg-emerald-300"></span><span class="text-sm">Secure payroll
-                            workflows</span></li>
-                </ul>
-
-                <div class="mt-8 opacity-90">
-                    <svg viewBox="0 0 600 300" class="w-full h-40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0" y="0" width="600" height="300" rx="20" fill="rgba(255,255,255,0.03)" />
-                        <g fill="rgba(255,255,255,0.08)">
-                            <circle cx="480" cy="80" r="32" />
-                            <rect x="60" y="140" width="160" height="8" rx="4" />
-                            <rect x="240" y="160" width="220" height="10" rx="5" />
-                        </g>
-                    </svg>
+<body class="min-h-screen grid grid-cols-1 lg:grid-cols-12">
+    <aside class="hidden lg:block lg:col-span-5 bg-[#11472f] text-white p-12">
+        <div class="max-w-md">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 bg-emerald-300 rounded flex items-center justify-center font-bold text-green-900">
+                    d</div>
+                <div>
+                    <h1 class="text-2xl font-extrabold">Dayflow</h1>
+                    <p class="text-sm opacity-90">Human Resource Management</p>
                 </div>
             </div>
-        </aside>
+            <h2 class="text-4xl font-serif mb-4">Every workday, perfectly aligned.</h2>
+            <p class="opacity-90">A calmer, clearer way to keep your people moving forward.</p>
+        </div>
+    </aside>
 
-        <p id="form-error" class="text-sm text-red-600 hidden" role="alert" aria-live="polite"></p>
-        <main class="col-span-1 lg:col-span-7 flex items-center justify-center p-8">
-            <div class="w-full max-w-md">
-                <div class="glass rounded-xl p-6 shadow-xl">
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-xl font-semibold">Welcome back</h3>
-                                <p class="text-sm text-slate-500">Sign in to access your Dayflow workspace</p>
-                            </div>
-                            <a href="/auth/signup.html" class="text-sm text-indigo-600 hover:underline">Create
-                                account</a>
-                        </div>
-                    </div>
-
-                    <form id="signin" class="space-y-4" onsubmit="return false;">
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-slate-600">Email</label>
-                            <div class="mt-1">
-                                <input id="email" name="email" type="email" required
-                                    class="w-full rounded-md border border-slate-200 px-3 py-2 focus:ring-0 focus:ring-offset-0 focus-ring focus-ring:shadow focus-ring:outline-none focus-ring:shadow-lg focus-ring:shadow-indigo-200 focus-ring:ring-0 focus:ring-indigo-400 focus-ring:ring-opacity-50 focus-ring:transition duration-150"
-                                    placeholder="you@company.com">
-                            </div>
-                            <p id="email-error" class="mt-1 text-sm text-red-600 hidden"></p>
-                        </div>
-
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-slate-600">Password</label>
-                            <div class="mt-1 relative">
-                                <input id="password" name="password" type="password" required
-                                    class="w-full rounded-md border border-slate-200 px-3 py-2 focus-ring"
-                                    placeholder="••••••••">
-                                <button id="togglePwd" type="button"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                                    aria-label="Toggle password visibility">Show</button>
-                            </div>
-                            <p id="password-error" class="mt-1 text-sm text-red-600 hidden"></p>
-                        </div>
-
-                        <div class="flex items-center justify-between">
-                            <label class="inline-flex items-center gap-2 text-sm"><input id="remember" type="checkbox"
-                                    class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                                Remember me</label>
-                            <a href="#" id="forgot" class="text-sm text-indigo-600 hover:underline">Forgot password?</a>
-                        </div>
-
-                        <div>
-                            <button id="submitBtn" type="submit"
-                                class="w-full inline-flex items-center justify-center gap-3 rounded-md bg-indigo-600 text-white px-4 py-2 font-semibold hover:bg-indigo-700 active:translate-y-0.5 transition">
-                                <svg id="submitSpinner" class="hidden animate-spin h-4 w-4 text-white spinner"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <circle cx="12" cy="12" r="10" stroke-width="3" class="opacity-20"></circle>
-                                    <path d="M22 12a10 10 0 00-10-10" stroke-width="3" stroke-linecap="round"></path>
-                                </svg>
-                                <span id="submitText">Sign In</span>
-                            </button>
-                        </div>
-
-                        <p id="form-error" class="text-sm text-red-600 hidden"></p>
-                    </form>
-
-                    <div class="mt-4 text-center text-sm text-slate-500">Or continue with</div>
-                    <div class="mt-3 grid grid-cols-2 gap-3">
-                        <button class="py-2 rounded-md border border-slate-200 hover:bg-slate-100">Sign in with
-                            SSO</button>
-                        <button class="py-2 rounded-md border border-slate-200 hover:bg-slate-100">Sign in with
-                            Google</button>
-                    </div>
+    <main class="col-span-1 lg:col-span-7 flex items-center justify-center p-8">
+        <div class="w-full max-w-md">
+            <h2 class="text-3xl font-serif mb-2">Welcome Back</h2>
+            <p class="text-sm text-slate-600 mb-6">Sign in to continue to your Dayflow workspace.</p>
+            <form id="signin" class="bg-white rounded-lg shadow p-6 space-y-4" onsubmit="return false;">
+                <label class="block text-sm">Email<input id="email" type="email" required
+                        class="mt-2 w-full rounded border px-3 py-2" placeholder="Enter your email"></label>
+                <label class="block text-sm">Password<input id="password" type="password" required
+                        class="mt-2 w-full rounded border px-3 py-2" placeholder="Enter your password"></label>
+                <div class="flex items-center justify-between"><label class="text-sm"><input type="checkbox"
+                            id="remember"> Remember me</label><a href="#" class="text-sm text-emerald-700">Forgot?</a>
                 </div>
-
-                <p class="mt-4 text-center text-xs text-slate-400">By signing in, you agree to Dayflow's terms and
-                    privacy policy.</p>
-            </div>
-        </main>
-    </div>
-
+                <button id="submit" class="w-full py-3 rounded bg-[#11472f] text-white">Sign In</button>
+                <p class="text-center text-sm text-slate-500">Don't have an account? <a href="/auth/signup.html"
+                        class="text-emerald-700">Sign Up</a></p>
+            </form>
+        </div>
+    </main>
     <script>
-        // Small interactions: toggle password, simulate submit
-        const toggle = document.getElementById('togglePwd');
-        const pwd = document.getElementById('password');
-        const form = document.getElementById('signin');
-        const submitBtn = document.getElementById('submitBtn');
-        const spinner = document.getElementById('submitSpinner');
-        const submitText = document.getElementById('submitText');
-        const formError = document.getElementById('form-error');
-
-        toggle.addEventListener('click', () => {
-            const showing = pwd.type === 'text';
-            pwd.type = showing ? 'password' : 'text';
-            toggle.textContent = showing ? 'Show' : 'Hide';
-            toggle.setAttribute('aria-pressed', String(!showing));
-        });
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            formError.classList.add('hidden');
-            submitBtn.disabled = true; submitBtn.setAttribute('aria-disabled', 'true'); spinner.classList.remove('hidden'); submitText.textContent = 'Signing in...';
-            // Simulate network latency and show spinner; replace with real fetch to /api/login
-            try {
-                await new Promise(r => setTimeout(r, 900));
-                // Example: perform fetch('/api/login', {method:'POST', body: JSON.stringify(...)})
-                // On success redirect or update UI
-                window.location.href = '/';
-            } catch (err) {
-                formError.textContent = 'Unable to sign in right now. Please try again.'; formError.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false; submitBtn.setAttribute('aria-disabled', 'false'); spinner.classList.add('hidden'); submitText.textContent = 'Sign In';
-            }
-        });
+        document.getElementById('signin').addEventListener('submit', async (e) => { e.preventDefault(); const payload = { email: document.getElementById('email').value, password: document.getElementById('password').value }; try { const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (res.ok) { const d = await res.json().catch(() => ({})); window.location.href = d.redirect || '/employee-dashboard.html'; } else { alert('Invalid credentials') } } catch (err) { alert('Network error') } })
     </script>
 </body>
 
