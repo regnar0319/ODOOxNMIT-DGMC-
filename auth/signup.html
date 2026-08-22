@@ -27,7 +27,8 @@
     <div class="min-h-screen flex items-center justify-center p-6">
         <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <!-- Left panel: branding & CTA -->
-            <div class="hidden md:flex flex-col justify-center p-8 rounded-xl brand-accent text-white">
+            <div class="hidden md:flex flex-col justify-center p-8 rounded-xl brand-accent text-white"
+                aria-hidden="false" aria-label="Create account feature highlights">
                 <div class="mb-6">
                     <div class="flex items-center gap-3">
                         <div
@@ -45,52 +46,60 @@
             </div>
 
             <!-- Right panel: sign up form -->
-            <div class="glass rounded-xl p-8 shadow-lg">
+            <div class="glass rounded-xl p-8 shadow-lg" role="region" aria-labelledby="signup-heading">
                 <div class="mb-4 flex items-center justify-between">
-                    <h1 class="text-2xl font-semibold">Create your account</h1>
+                    <h1 id="signup-heading" class="text-2xl font-semibold">Create your account</h1>
                     <a href="/auth/signin.html" class="text-sm text-indigo-600 hover:underline">Sign in</a>
                 </div>
 
-                <form id="signup" class="space-y-4" onsubmit="return false;">
+                <form id="signup" class="space-y-4" onsubmit="return false;" aria-labelledby="signup-heading">
                     <div>
-                        <label class="block text-sm font-medium text-slate-600">Employee ID</label>
-                        <input id="empId" name="employee_id" type="text" required
+                        <label for="empId" class="block text-sm font-medium text-slate-600">Employee ID</label>
+                        <input id="empId" name="employee_id" type="text" aria-describedby="empId-error" required
                             class="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 focus-ring"
                             placeholder="EMP001">
+                        <p id="empId-error" class="mt-1 text-sm text-red-600 hidden" role="alert" aria-live="polite">
+                        </p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-600">Email</label>
-                        <input id="email" name="email" type="email" required
+                        <label for="email" class="block text-sm font-medium text-slate-600">Email</label>
+                        <input id="email" name="email" type="email" aria-describedby="email-error" required
                             class="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 focus-ring"
                             placeholder="you@company.com">
+                        <p id="email-error" class="mt-1 text-sm text-red-600 hidden" role="alert" aria-live="polite">
+                        </p>
                         <p class="mt-1 text-sm text-slate-400">We'll send a verification link to this email.</p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-600">Role</label>
-                        <select id="role" name="role"
+                        <label for="role" class="block text-sm font-medium text-slate-600">Role</label>
+                        <select id="role" name="role" aria-describedby="role-help"
                             class="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 focus-ring">
                             <option value="employee">Employee</option>
                             <option value="hr">Admin / HR</option>
                         </select>
+                        <p id="role-help" class="mt-1 text-sm text-slate-400">Choose the role that matches your account
+                            type.</p>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-600">Password</label>
                         <div class="relative mt-1">
-                            <input id="password" name="password" type="password" required
-                                class="w-full rounded-md border border-slate-200 px-3 py-2 focus-ring"
+                            <input id="password" name="password" type="password" aria-describedby="password-error"
+                                required class="w-full rounded-md border border-slate-200 px-3 py-2 focus-ring"
                                 placeholder="Create a strong password">
-                            <button id="toggle" type="button"
+                            <button id="toggle" type="button" aria-pressed="false"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500">Show</button>
                         </div>
                         <div class="mt-2 text-xs text-slate-500">Use at least 8 characters with uppercase, lowercase, a
                             number and a symbol.</div>
 
                         <!-- Strength bar -->
-                        <div class="strength-bar mt-2 w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div id="strengthFill" class="h-full bg-red-500 w-0"></div>
+                        <div class="strength-bar mt-2 w-full h-2 bg-slate-100 rounded-full overflow-hidden"
+                            aria-hidden="false" aria-label="Password strength">
+                            <div id="strengthFill" class="h-full bg-red-500 w-0" role="progressbar" aria-valuemin="0"
+                                aria-valuemax="100" aria-valuenow="0"></div>
                         </div>
                         <div id="strengthLabel" class="mt-2 text-xs font-medium text-slate-600">Strength: <span
                                 id="strengthText">Too weak</span></div>
@@ -108,7 +117,7 @@
                         </button>
                     </div>
 
-                    <p id="signupMessage" class="text-sm text-red-600 hidden"></p>
+                    <p id="signupMessage" class="text-sm text-red-600 hidden" role="status" aria-live="polite"></p>
                 </form>
                 <p class="mt-3 text-sm text-slate-500">Already registered? <a href="/auth/signin.html"
                         class="text-indigo-600 hover:underline">Sign in</a></p>

@@ -31,7 +31,8 @@
 <body class="antialiased bg-slate-50 text-slate-800">
     <div class="min-h-screen grid grid-cols-1 lg:grid-cols-12">
         <!-- Illustration / Value panel -->
-        <aside class="hidden lg:block lg:col-span-5 brand-accent text-white p-12">
+        <aside class="hidden lg:block lg:col-span-5 brand-accent text-white p-12" aria-hidden="false"
+            aria-label="Marketing and product highlights">
             <div class="max-w-md mx-auto">
                 <div class="flex items-center gap-3 mb-8">
                     <div
@@ -52,15 +53,14 @@
                             class="w-2 h-2 mt-2 rounded-full bg-emerald-300"></span><span class="text-sm">Employee
                             directory & roles</span></li>
                     <li class="flex items-start gap-3"><span
-                            class="w-2 h-2 mt-2 rounded-full bg-emerald-300"></span><span class="text-sm">Simple
-                            attendance & mobile check-in</span></li>
+                            class="w-2 h-2 mt-2 rounded-full bg-emerald-300"></span><span class="text-sm">Attendance &
+                            mobile check-in</span></li>
                     <li class="flex items-start gap-3"><span
                             class="w-2 h-2 mt-2 rounded-full bg-emerald-300"></span><span class="text-sm">Secure payroll
                             workflows</span></li>
                 </ul>
 
                 <div class="mt-8 opacity-90">
-                    <!-- Decorative illustration (SVG) -->
                     <svg viewBox="0 0 600 300" class="w-full h-40" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="0" y="0" width="600" height="300" rx="20" fill="rgba(255,255,255,0.03)" />
                         <g fill="rgba(255,255,255,0.08)">
@@ -73,7 +73,7 @@
             </div>
         </aside>
 
-        <!-- Auth form panel -->
+        <p id="form-error" class="text-sm text-red-600 hidden" role="alert" aria-live="polite"></p>
         <main class="col-span-1 lg:col-span-7 flex items-center justify-center p-8">
             <div class="w-full max-w-md">
                 <div class="glass rounded-xl p-6 shadow-xl">
@@ -163,12 +163,13 @@
             const showing = pwd.type === 'text';
             pwd.type = showing ? 'password' : 'text';
             toggle.textContent = showing ? 'Show' : 'Hide';
+            toggle.setAttribute('aria-pressed', String(!showing));
         });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             formError.classList.add('hidden');
-            submitBtn.disabled = true; spinner.classList.remove('hidden'); submitText.textContent = 'Signing in...';
+            submitBtn.disabled = true; submitBtn.setAttribute('aria-disabled', 'true'); spinner.classList.remove('hidden'); submitText.textContent = 'Signing in...';
             // Simulate network latency and show spinner; replace with real fetch to /api/login
             try {
                 await new Promise(r => setTimeout(r, 900));
@@ -178,7 +179,7 @@
             } catch (err) {
                 formError.textContent = 'Unable to sign in right now. Please try again.'; formError.classList.remove('hidden');
             } finally {
-                submitBtn.disabled = false; spinner.classList.add('hidden'); submitText.textContent = 'Sign In';
+                submitBtn.disabled = false; submitBtn.setAttribute('aria-disabled', 'false'); spinner.classList.add('hidden'); submitText.textContent = 'Sign In';
             }
         });
     </script>
