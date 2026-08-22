@@ -3,16 +3,22 @@
 import os
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr, Field
 from supabase import Client, create_client
+
+load_dotenv(".env.local")
 
 
 class SignupRequest(BaseModel):
 	employee_id: str = Field(min_length=1, max_length=50)
 	email: EmailStr
 	password: str = Field(min_length=8, max_length=128)
-	role: Literal["Employee", "Admin"]
+	role: Literal["Employee", "Admin", "HR"]
+	name: str = ""
+	company: str = ""
+	phone: str = ""
 
 
 class SigninRequest(BaseModel):
@@ -62,14 +68,14 @@ def _response_value(response: Any, name: str, default: Any = None) -> Any:
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def signup(payload: SignupRequest, supabase: Client = Depends(get_supabase)) -> dict[str, Any]:
 	email = payload.email.strip().lower()
-	role = payload.role.lower()
+	role = "admin" if payload.role.lower() in {"admin", "hr"} else "employee"
 	admin_client = get_supabase_admin()
 
 	try:
 		auth_response = supabase.auth.sign_up({
 			"email": email,
 			"password": payload.password,
-			"options": {"data": {"employee_id": payload.employee_id, "role": role}},
+			"options": {"data": {"employee_id": payload.employee_id, "role": role, "name": payload.name, "company": payload.company, "phone": payload.phone}},
 		})
 		user = _response_value(auth_response, "user")
 		if not user:
@@ -79,9 +85,9 @@ def signup(payload: SignupRequest, supabase: Client = Depends(get_supabase)) -> 
 			"employee_id": payload.employee_id,
 			"email": email,
 			"role": role,
-			"full_name": "",
+			"full_name": payload.name,
 			"job_title": "",
-			"department": "",
+			"department": payload.company,
 			"employment_status": "Active",
 			"profile_picture_url": None,
 		}
@@ -108,7 +114,7 @@ def signup(payload: SignupRequest, supabase: Client = Depends(get_supabase)) -> 
 
 
 @router.post("/signin")
-def signin(payload: SigninRequest, supabase: Client = Depends(get_supabase)) -> dict[str, Any]:
+def signin(payload: SigninRequest, response: Response, supabase: Client = Depends(get_supabase)) -> dict[str, Any]:
 	email = payload.email.strip().lower()
 	try:
 		auth_response = supabase.auth.sign_in_with_password({"email": email, "password": payload.password})
@@ -120,10 +126,14 @@ def signin(payload: SigninRequest, supabase: Client = Depends(get_supabase)) -> 
 
 		metadata = _user_value(user, "user_metadata", {}) or {}
 		app_metadata = _user_value(user, "app_metadata", {}) or {}
-		role = app_metadata.get("role") or metadata.get("role") or "employee"
+		role = str(app_metadata.get("role") or metadata.get("role") or "employee").lower()
+		if role in {"admin", "hr"}:
+			role = "hr"
+		response.set_cookie(key="session", value=access_token, path="/", httponly=True, samesite="lax", secure=os.getenv("COOKIE_SECURE", "false").lower() == "true")
 		return {
 			"access_token": access_token,
 			"token_type": "bearer",
+			"redirect": "/admin-spa" if role == "hr" else "/employee-spa",
 			"user": {"id": _user_value(user, "id"), "email": _user_value(user, "email", email), "role": role},
 		}
 	except Exception as exc:

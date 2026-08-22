@@ -112,9 +112,9 @@ form.addEventListener('submit', async (event) => {
     button.textContent = pageType === 'signin' ? 'Signing in...' : 'Creating account...';
     const payload = pageType === 'signin'
         ? { email: form.elements.email.value.trim(), password: form.elements.password.value }
-        : { employee_id: form.elements.employee_id.value.trim(), email: form.elements.email.value.trim(), password: form.elements.password.value, confirm_password: form.elements.confirm_password.value, role: form.elements.role.value, name: form.elements.employee_id.value.trim(), company: 'Dayflow', phone: 'Not provided' };
+        : { employee_id: form.elements.employee_id.value.trim(), email: form.elements.email.value.trim(), password: form.elements.password.value, confirm_password: form.elements.confirm_password.value, role: form.elements.role.value === 'HR' ? 'Admin' : 'Employee', name: form.elements.employee_id.value.trim(), company: 'Dayflow', phone: '' };
     try {
-        const response = await fetch(pageType === 'signin' ? '/api/login' : '/api/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const response = await fetch(pageType === 'signin' ? '/signin' : '/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.detail || 'Unable to create your account. Please try again.');
         if (pageType === 'signin') window.location.href = data.redirect || '/employee-spa';
