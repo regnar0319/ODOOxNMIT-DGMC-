@@ -133,7 +133,7 @@ form.addEventListener('submit', async (event) => {
         if (pageType === 'signin') window.location.href = data.redirect || '/employee-spa';
         else showVerification(payload.email);
     } catch (error) {
-        setStatus(pageType === 'signin' ? 'Incorrect email or password.' : 'Unable to create your account. Please try again.');
+        setStatus(pageType === 'signin' ? 'Incorrect email or password.' : error.message || 'Unable to create your account. Please try again.');
         button.disabled = false;
         button.textContent = pageType === 'signin' ? 'Sign In' : 'Create Account';
     }
