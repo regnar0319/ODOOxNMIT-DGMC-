@@ -382,6 +382,7 @@ async def api_signup(request: Request):
 		company = str(body.get('company', '')).strip()
 		name = str(body.get('name', '')).strip() or employee_id
 		email = str(body.get('email', '')).strip().lower()
+		requested_role = str(body.get('role', 'Employee')).strip().lower()
 		phone = str(body.get('phone', '')).strip()
 		password = str(body.get('password', ''))
 		confirm_password = str(body.get('confirm_password', ''))
@@ -389,6 +390,9 @@ async def api_signup(request: Request):
 		raise HTTPException(status_code=400, detail='Invalid request')
 	if not employee_id or not email or not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', email):
 		raise HTTPException(status_code=400, detail='Please complete all required fields')
+	if requested_role not in {'employee', 'hr', 'admin'}:
+		raise HTTPException(status_code=400, detail='Invalid account type')
+	role = 'hr' if requested_role in {'hr', 'admin'} else 'employee'
 	if phone and not re.fullmatch(r'\+?[0-9()\-\s]{7,20}', phone):
 		raise HTTPException(status_code=400, detail='Please enter a valid phone number')
 	if not re.fullmatch(r'(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}', password):
@@ -397,13 +401,13 @@ async def api_signup(request: Request):
 		raise HTTPException(status_code=400, detail='Passwords do not match.')
 	if supabase:
 		try:
-			supabase.auth.sign_up({'email': email, 'password': password, 'options': {'data': {'employee_id': employee_id, 'name': name, 'company': company, 'phone': phone, 'role': 'employee'}, 'email_redirect_to': None}})
+			supabase.auth.sign_up({'email': email, 'password': password, 'options': {'data': {'employee_id': employee_id, 'name': name, 'company': company, 'phone': phone, 'role': role}, 'email_redirect_to': None}})
 		except Exception:
 			raise HTTPException(status_code=400, detail='Unable to create account. The email may already be registered.')
 		return JSONResponse({'message': 'Account created successfully. Please verify your email to continue.'}, status_code=201)
 	if email in USERS:
 		raise HTTPException(status_code=409, detail='An account with this email already exists')
-	USERS[email] = {'password': password, 'role': 'employee', 'active': True}
+	USERS[email] = {'password': password, 'role': role, 'active': True}
 	EMPLOYEES[email] = {'profile': {'name': name, 'email': email, 'phone': phone, 'address': '', 'job_title': '', 'department': company}, 'attendance': [], 'leaves': [], 'payroll': {'salary': 0, 'currency': 'USD', 'last_payslip': None}}
 	return JSONResponse({'message': 'Account created successfully. Please verify your email to continue.'}, status_code=201)
 
