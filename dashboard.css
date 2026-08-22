@@ -1,22 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap');
 
 :root {
-    --green-950: #123c2d;
-    --green-800: #1f6046;
+    --deep: #123c2d;
+    --green: #1f6046;
     --lime: #c8ef62;
     --ink: #17211c;
     --muted: #68766e;
     --line: #dce5df;
     --paper: #f5f7f4;
     --surface: #fff;
-    --blue: #3b6ea8;
-    --blue-soft: #edf4fb;
     --success: #237653;
-    --success-soft: #e6f6ec;
+    --success-bg: #e6f6ec;
     --warning: #996a15;
-    --warning-soft: #fff5df;
+    --warning-bg: #fff5df;
     --error: #b33e3e;
-    --error-soft: #fff1f1;
+    --error-bg: #fff1f1;
+    --blue: #3b6ea8;
+    --blue-bg: #edf4fb;
     --shadow: 0 12px 34px rgba(18, 60, 45, .07)
 }
 
@@ -34,7 +34,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
     font: inherit
 }
 
@@ -57,7 +59,7 @@ a {
     flex-direction: column;
     padding: 25px 14px;
     color: #ecf7ef;
-    background: var(--green-950)
+    background: var(--deep)
 }
 
 .brand {
@@ -65,6 +67,8 @@ a {
     align-items: center;
     gap: 10px;
     padding: 0 12px;
+    color: #fff;
+    text-decoration: none;
     font-weight: 800;
     letter-spacing: -.04em
 }
@@ -74,10 +78,9 @@ a {
     height: 29px;
     display: grid;
     place-items: center;
-    color: var(--green-950);
+    color: var(--deep);
     background: var(--lime);
-    border-radius: 9px 9px 9px 2px;
-    font-weight: 800
+    border-radius: 9px 9px 9px 2px
 }
 
 .nav {
@@ -133,7 +136,7 @@ a {
     gap: 20px;
     padding: 0 36px;
     border-bottom: 1px solid var(--line);
-    background: rgba(255, 255, 255, .76);
+    background: rgba(255, 255, 255, .8);
     backdrop-filter: blur(12px)
 }
 
@@ -159,13 +162,13 @@ a {
     border: 1px solid var(--line);
     border-radius: 9px;
     background: #fff;
-    color: var(--green-950);
+    color: var(--deep);
     cursor: pointer
 }
 
 .avatar-button {
     border: 0;
-    color: var(--green-950);
+    color: var(--deep);
     background: var(--lime);
     font-size: .72rem;
     font-weight: 800
@@ -191,7 +194,7 @@ a {
 
 .eyebrow {
     margin: 0 0 9px;
-    color: var(--green-800);
+    color: var(--green);
     font-size: .68rem;
     font-weight: 800;
     letter-spacing: .16em
@@ -226,25 +229,25 @@ a {
 }
 
 .primary {
-    border: 1px solid var(--green-800);
+    border: 1px solid var(--green);
     color: #fff;
-    background: var(--green-800)
+    background: var(--green)
 }
 
 .primary:hover {
-    background: var(--green-950)
+    background: var(--deep)
 }
 
 .secondary {
     border: 1px solid var(--line);
-    color: var(--green-800);
+    color: var(--green);
     background: #fff
 }
 
 .danger {
     border: 1px solid #efcaca;
     color: var(--error);
-    background: var(--error-soft)
+    background: var(--error-bg)
 }
 
 .cards {
@@ -280,7 +283,7 @@ a {
     display: grid;
     place-items: center;
     border-radius: 8px;
-    color: var(--green-800);
+    color: var(--green);
     background: #edf7ef
 }
 
@@ -332,7 +335,8 @@ a {
     font-size: .72rem
 }
 
-.tabs {
+.tabs,
+.segmented {
     display: flex;
     gap: 5px;
     padding: 3px;
@@ -341,7 +345,8 @@ a {
     background: #f6f9f6
 }
 
-.tabs button {
+.tabs button,
+.segmented button {
     border: 0;
     border-radius: 6px;
     padding: 7px 10px;
@@ -352,8 +357,9 @@ a {
     cursor: pointer
 }
 
-.tabs button.active {
-    color: var(--green-950);
+.tabs button.active,
+.segmented button.active {
+    color: var(--deep);
     background: #fff;
     box-shadow: 0 2px 8px rgba(18, 60, 45, .08)
 }
@@ -401,7 +407,7 @@ tr:hover td {
     place-items: center;
     flex: 0 0 30px;
     border-radius: 50%;
-    color: var(--green-950);
+    color: var(--deep);
     background: #dff0e5;
     font-size: .66rem;
     font-weight: 800
@@ -440,19 +446,19 @@ tr:hover td {
 .badge.success,
 .badge.active {
     color: var(--success);
-    background: var(--success-soft)
+    background: var(--success-bg)
 }
 
 .badge.warning,
 .badge.pending {
     color: var(--warning);
-    background: var(--warning-soft)
+    background: var(--warning-bg)
 }
 
 .badge.error,
 .badge.rejected {
     color: var(--error);
-    background: var(--error-soft)
+    background: var(--error-bg)
 }
 
 .badge.neutral {
@@ -462,7 +468,7 @@ tr:hover td {
 
 .badge.info {
     color: var(--blue);
-    background: var(--blue-soft)
+    background: var(--blue-bg)
 }
 
 .empty {
@@ -514,7 +520,7 @@ tr:hover td {
     border-radius: 7px;
     border: 1px solid var(--line);
     background: #fff;
-    color: var(--green-800);
+    color: var(--green);
     font-size: .68rem;
     font-weight: 800;
     cursor: pointer
@@ -522,13 +528,13 @@ tr:hover td {
 
 .inline-actions .approve {
     color: var(--success);
-    background: var(--success-soft);
+    background: var(--success-bg);
     border-color: #ccebd7
 }
 
 .inline-actions .reject {
     color: var(--error);
-    background: var(--error-soft);
+    background: var(--error-bg);
     border-color: #f0cccc
 }
 
@@ -579,7 +585,7 @@ tr:hover td {
     padding: 12px;
     border: 1px solid var(--line);
     border-radius: 9px;
-    color: var(--green-950);
+    color: var(--deep);
     background: #fff;
     cursor: pointer;
     font-size: .72rem;
@@ -596,7 +602,7 @@ tr:hover td {
     align-items: center;
     gap: 14px;
     padding: 19px;
-    background: var(--green-950);
+    background: var(--deep);
     color: #fff
 }
 
@@ -741,7 +747,7 @@ tr:hover td {
 .form-field input:focus,
 .form-field select:focus,
 .form-field textarea:focus {
-    border-color: var(--green-800);
+    border-color: var(--green);
     box-shadow: 0 0 0 3px rgba(31, 96, 70, .1)
 }
 
@@ -780,6 +786,11 @@ tr:hover td {
         transform: none;
         opacity: 1
     }
+}
+
+:focus-visible {
+    outline: 3px solid var(--lime);
+    outline-offset: 2px
 }
 
 @media(max-width:1050px) {
