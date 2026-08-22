@@ -1,6 +1,6 @@
+fastapi
+uvicorn
 supabase
-PyJWT
-python-dotenv
 psycopg2-binary
-requests
-gunicorn
+python-dotenv
+# ... include your other dependencies here
