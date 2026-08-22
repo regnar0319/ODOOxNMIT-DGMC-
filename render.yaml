@@ -4,7 +4,9 @@ services:
     env: python
     plan: free
     buildCommand: ""
-    startCommand: "python main.py"
+    # Recommend using uvicorn so Render can run the ASGI FastAPI app via `main:app`.
+    # Uses the $PORT environment variable Render provides at runtime.
+    startCommand: "python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
     envVars: []
     instanceCount: 1
     instanceType: starter

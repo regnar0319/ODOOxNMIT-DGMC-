@@ -5,6 +5,26 @@ from http import cookies
 from datetime import datetime, date, timezone
 import os
 import mimetypes
+try:
+	from supabase import create_client
+except Exception:
+	create_client = None
+
+# Supabase client initialization (uses environment variables)
+SUPABASE_URL = os.environ.get('SUPABASE_URL') or os.environ.get('NEXT_PUBLIC_SUPABASE_URL')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY') or os.environ.get('SUPABASE_ANON_KEY') or os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
+if create_client and SUPABASE_URL and SUPABASE_KEY:
+	try:
+		supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+	except Exception:
+		supabase = None
+else:
+	supabase = None
+
+def get_supabase():
+	if not supabase:
+		raise RuntimeError('Supabase client not configured. Set SUPABASE_URL and SUPABASE_KEY.')
+	return supabase
 
 # Provide an ASGI app so Render/uvicorn can import `main:app`.
 from fastapi import FastAPI, Request, Response, HTTPException
