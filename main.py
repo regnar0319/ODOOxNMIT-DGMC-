@@ -287,6 +287,14 @@ async def get_root(request: Request):
 	return HTMLResponse(content=PAGE)
 
 
+@app.get('/signin')
+@app.get('/signin.html')
+async def get_signin_alias(request: Request):
+	if os.path.isfile('auth/signin.html'):
+		return FileResponse('auth/signin.html', media_type='text/html')
+	raise HTTPException(status_code=404)
+
+
 @app.get('/signup')
 async def get_signup(request: Request):
 	if os.path.isfile('auth/signup.html'):
