@@ -2,7 +2,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from urllib.parse import parse_qs, urlparse
 from http import cookies
-from datetime import datetime, date
+from datetime import datetime, date, timezone
+import os
+import mimetypes
 
 
 HOST = "127.0.0.1"
@@ -231,6 +233,30 @@ document.getElementById('payroll').onclick=async()=>{ try{const p=await getJSON(
 document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=/; Max-Age=0'; location='/'; };
 </script></body></html>"""
 
+		ADMIN_DASH = r"""<!doctype html>
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Desk</title></head>
+<body>
+<h1>Admin / HR Desk</h1>
+<div id="cards">
+<button id="users">Users</button>
+<button id="attendance">Attendance</button>
+<button id="leaves">Leaves</button>
+<button id="payroll">Payroll</button>
+<button id="reports">Reports</button>
+<button id="logout">Logout</button>
+</div>
+<div id="content"></div>
+<script>
+async function getJSON(path){const r=await fetch(path,{credentials:'same-origin'}); if(!r.ok) throw r; return r.json();}
+document.getElementById('users').onclick=async()=>{ try{const p=await getJSON('/api/admin/users'); document.getElementById('content').innerHTML=`<pre>${JSON.stringify(p,0,2)}</pre>`;}catch(e){alert('Failed');}};
+document.getElementById('attendance').onclick=async()=>{ try{const a=await getJSON('/api/admin/attendance'); document.getElementById('content').innerHTML=`<pre>${JSON.stringify(a,0,2)}</pre>`;}catch(e){alert('Failed');}};
+document.getElementById('leaves').onclick=async()=>{ try{const l=await getJSON('/api/admin/leave/requests'); document.getElementById('content').innerHTML=`<pre>${JSON.stringify(l,0,2)}</pre>`;}catch(e){alert('Failed');}};
+document.getElementById('payroll').onclick=async()=>{ try{const p=await getJSON('/api/admin/payroll/runs'); document.getElementById('content').innerHTML=`<pre>${JSON.stringify(p,0,2)}</pre>`;}catch(e){alert('Failed');}};
+document.getElementById('reports').onclick=async()=>{ document.getElementById('content').innerHTML='Reports UI (not implemented)'; };
+document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=/; Max-Age=0'; location='/'; };
+</script></body></html>"""
+
 		def do_GET(self):
 			path = urlparse(self.path).path
 			if path == "/":
@@ -252,13 +278,111 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 				self.end_headers()
 				self.wfile.write(body)
 			elif path == "/admin-dashboard":
-				body = b"<html><body><h1>Admin Dashboard (placeholder)</h1></body></html>"
+				email = self._current_user_email()
+				if not email or email not in USERS or USERS[email].get('role') != 'hr':
+					self.send_error(403)
+					return
+				body = self.ADMIN_DASH.encode('utf-8')
 				self.send_response(200)
 				self.send_header('Content-Type', 'text/html; charset=utf-8')
 				self.send_header('Content-Length', str(len(body)))
 				self.end_headers()
 				self.wfile.write(body)
+			elif path == '/admin-spa':
+				# serve the admin mockup SPA from disk (requires HR role)
+				email = self._current_user_email()
+				if not email or email not in USERS or USERS[email].get('role') != 'hr':
+					self.send_error(403)
+					return
+				try:
+					with open('admin_mockup.html', 'rb') as f:
+						body = f.read()
+				except Exception:
+					self.send_error(500)
+					return
+				self.send_response(200)
+				self.send_header('Content-Type', 'text/html; charset=utf-8')
+				self.send_header('Content-Length', str(len(body)))
+				self.end_headers()
+				self.wfile.write(body)
+			elif path == '/employee-spa' or path == '/employee_spa.html' or path == '/employee_spa':
+				# serve employee SPA (employee role required)
+				email = self._current_user_email()
+				if not email or email not in USERS or USERS[email].get('role') != 'employee':
+					self.send_error(403)
+					return
+				try:
+					with open('employee_spa.html', 'rb') as f:
+						body = f.read()
+				except Exception:
+					self.send_error(500)
+					return
+				self.send_response(200)
+				self.send_header('Content-Type', 'text/html; charset=utf-8')
+				self.send_header('Content-Length', str(len(body)))
+				self.end_headers()
+				self.wfile.write(body)
+			elif path == '/admin_styles.css':
+				# serve CSS for the mockup
+				try:
+					with open('admin_styles.css', 'rb') as f:
+						body = f.read()
+				except Exception:
+					self.send_error(500)
+					return
+				self.send_response(200)
+				self.send_header('Content-Type', 'text/css; charset=utf-8')
+				self.send_header('Content-Length', str(len(body)))
+				self.end_headers()
+				self.wfile.write(body)
 			elif path.startswith('/api/'):
+				# Admin APIs under /api/admin/*
+				if path.startswith('/api/admin/'):
+					# require hr role
+					caller = self._current_user_email()
+					if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+						self._send_json(403, {'error':'forbidden'})
+						return
+					parts = path.split('/')
+					# GET /api/admin/users
+					if path == '/api/admin/users':
+						users = []
+						for email, meta in USERS.items():
+							entry = {'email': email, 'role': meta.get('role')}
+							if email in EMPLOYEES:
+								entry['profile'] = EMPLOYEES[email]['profile']
+							users.append(entry)
+						self._send_json(200, users)
+						return
+					# GET /api/admin/users/{email}
+					if len(parts) >= 4 and parts[2] == 'admin' and parts[3] == 'users' and len(parts) == 5 and parts[4]:
+						target = parts[4]
+						if target not in USERS:
+							self._send_json(404, {'error':'not found'})
+							return
+						resp = {'email': target, 'role': USERS[target].get('role')}
+						if target in EMPLOYEES:
+							resp['profile'] = EMPLOYEES[target]['profile']
+							resp['attendance'] = EMPLOYEES[target]['attendance']
+							resp['leaves'] = EMPLOYEES[target]['leaves']
+							resp['payroll'] = EMPLOYEES[target]['payroll']
+						self._send_json(200, resp)
+						return
+					# admin attendance and leave summaries (simple)
+					if path == '/api/admin/attendance':
+						summary = {e: EMPLOYEES[e]['attendance'] for e in EMPLOYEES}
+						self._send_json(200, summary)
+						return
+					if path == '/api/admin/leave/requests':
+						summary = {e: EMPLOYEES[e]['leaves'] for e in EMPLOYEES}
+						self._send_json(200, summary)
+						return
+					if path == '/api/admin/payroll/runs':
+						# placeholder: no payroll runs yet
+						self._send_json(200, [])
+						return
+					self.send_error(404)
+					return
 				# API GETs: profile, attendance, leave, payroll
 				email = self._current_user_email()
 				if not email or email not in EMPLOYEES:
@@ -275,7 +399,33 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 				else:
 					self.send_error(404)
 			else:
-				self.send_error(404)
+				# Generic static file serving for other pages/assets (safe, simple)
+				# don't attempt to serve /api/* here
+				if path.startswith('/api/'):
+					self.send_error(404)
+					return
+				file_path = path.lstrip('/') or 'index.html'
+				# disallow path traversal
+				if '..' in file_path or file_path.startswith('/'):
+					self.send_error(400)
+					return
+				if os.path.isfile(file_path):
+					ctype, _ = mimetypes.guess_type(file_path)
+					ctype = ctype or 'application/octet-stream'
+					try:
+						with open(file_path, 'rb') as f:
+							body = f.read()
+					except Exception:
+						self.send_error(500)
+						return
+					self.send_response(200)
+					self.send_header('Content-Type', f"{ctype}; charset=utf-8")
+					self.send_header('Content-Length', str(len(body)))
+					self.end_headers()
+					self.wfile.write(body)
+				else:
+					self.send_error(404)
+				return
 
 		def do_POST(self):
 			path = urlparse(self.path).path
@@ -298,6 +448,59 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 				self._send_json(200, {'redirect': redirect}, extra_headers=extra)
 				return
 			# other POST API endpoints
+			# Admin POST endpoints (HR role required)
+			if path.startswith('/api/admin/'):
+				caller = self._current_user_email()
+				if not caller or caller not in USERS or USERS[caller].get('role') != 'hr':
+					self._send_json(403, {'error':'forbidden'})
+					return
+				parts = path.split('/')
+				# POST /api/admin/users -> create user
+				if path == '/api/admin/users':
+					try:
+						length = int(self.headers.get('Content-Length','0'))
+						body = json.loads(self.rfile.read(length))
+					except Exception:
+						self._send_json(400, {'error':'invalid request'})
+						return
+					target = body.get('email','').strip().lower()
+					if not target:
+						self._send_json(400, {'error':'missing email'})
+						return
+					if target in USERS:
+						self._send_json(409, {'error':'user exists'})
+						return
+					USERS[target] = {'password': body.get('password','TempPass123'), 'role': body.get('role','employee')}
+					if USERS[target]['role'] == 'employee':
+						EMPLOYEES[target] = {'profile': {'name': body.get('first_name','') + ' ' + body.get('last_name',''), 'email': target, 'phone': body.get('phone',''), 'address': body.get('address',''), 'job_title': body.get('job_title',''), 'department': body.get('department','')}, 'attendance': [], 'leaves': [], 'payroll': {'salary': body.get('salary',0), 'currency': body.get('currency','USD'), 'last_payslip': None}}
+					self._send_json(201, {'email': target, 'role': USERS[target]['role']})
+					return
+				# POST /api/admin/users/{email}/deactivate
+				if len(parts) >= 6 and parts[2] == 'admin' and parts[3] == 'users' and parts[5] == 'deactivate':
+					target = parts[4]
+					if target not in USERS:
+						self._send_json(404, {'error':'not found'})
+						return
+					USERS[target]['active'] = False
+					self._send_json(200, {'email': target, 'active': False})
+					return
+				# POST /api/admin/users/{email}/update -> update basic fields
+				if len(parts) >= 5 and parts[2] == 'admin' and parts[3] == 'users' and parts[4]:
+					target = parts[4]
+					try:
+						length = int(self.headers.get('Content-Length','0'))
+						body = json.loads(self.rfile.read(length))
+					except Exception:
+						self._send_json(400, {'error':'invalid request'})
+						return
+					# allow updating role or profile
+					if 'role' in body:
+						USERS[target]['role'] = body['role']
+					if target in EMPLOYEES and 'profile' in body:
+						EMPLOYEES[target]['profile'].update(body['profile'])
+					self._send_json(200, {'email': target})
+					return
+			# fallback to employee-scoped endpoints
 			email = self._current_user_email()
 			if not email or email not in EMPLOYEES:
 				self._send_json(403, {'error': 'Not authenticated'})
@@ -317,7 +520,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 				return
 			if path == '/api/attendance/checkin':
 				today = date.today().isoformat()
-				now = datetime.utcnow().isoformat()
+				now = datetime.now(timezone.utc).isoformat()
 				att = EMPLOYEES[email]['attendance']
 				entry = next((x for x in att if x['date'] == today), None)
 				if not entry:
@@ -329,7 +532,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 				return
 			if path == '/api/attendance/checkout':
 				today = date.today().isoformat()
-				now = datetime.utcnow().isoformat()
+				now = datetime.now(timezone.utc).isoformat()
 				att = EMPLOYEES[email]['attendance']
 				entry = next((x for x in att if x['date'] == today), None)
 				if not entry:
@@ -361,6 +564,7 @@ document.getElementById('logout').onclick=()=>{ document.cookie='session=; Path=
 
 		def log_message(self, format, *args):
 			return
+
 
 
 if __name__ == "__main__":

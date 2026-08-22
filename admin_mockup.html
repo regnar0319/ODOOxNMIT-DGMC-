@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin Desk Mockup</title>
+    <link rel="stylesheet" href="admin_styles.css">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="brand">Dayflow — Admin Desk</div>
+        <div class="actions"><button id="newUserBtn" class="btn primary">New User</button><button id="exportBtn"
+                class="btn">Export</button></div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <nav>
+                <a class="active">People</a>
+                <a>Attendance</a>
+                <a>Leave Requests</a>
+                <a>Payroll</a>
+                <a>Reports</a>
+                <a>Documents</a>
+            </nav>
+        </aside>
+        <main class="content">
+            <section class="cards">
+                <div class="card">Pending Approvals <strong>3</strong></div>
+                <div class="card">Payroll Window <strong>Open</strong></div>
+                <div class="card">Active Users <strong>24</strong></div>
+            </section>
+            <section class="table-wrap">
+                <div class="table-header">
+                    <h2>People</h2><input id="searchBox" placeholder="Search employees..." />
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody">
+                        <!-- populated by JS -->
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+    <!-- New User Modal (accessible) -->
+    <div id="modal" class="modal" aria-hidden="true">
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+            <div class="modal-header">
+                <h3 id="modalTitle">Create User</h3><button id="modalClose" aria-label="Close dialog"
+                    class="btn">×</button>
+            </div>
+            <form id="userForm">
+                <div class="form-row"><label for="emailField">Email<input id="emailField" name="email"
+                            required /></label></div>
+                <div class="form-row"><label for="firstName">First name<input id="firstName"
+                            name="first_name" /></label></div>
+                <div class="form-row"><label for="lastName">Last name<input id="lastName" name="last_name" /></label>
+                </div>
+                <div class="form-row"><label for="roleField">Role<select id="roleField" name="role">
+                            <option value="employee">Employee</option>
+                            <option value="hr">HR</option>
+                        </select></label></div>
+                <div class="form-row actions"><button type="submit" class="btn primary">Save</button> <button
+                        type="button" id="cancelBtn" class="btn">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function api(path, opts = {}) {
+            const res = await fetch(path, Object.assign({ credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } }, opts));
+            if (!res.ok) throw res;
+            return res.json();
+        }
+
+        async function loadUsers() {
+            try {
+                const users = await api('/api/admin/users');
+                const tbody = document.getElementById('usersBody'); tbody.innerHTML = '';
+                users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    const name = u.profile?.name || '';
+                    tr.innerHTML = `<td>${name}</td><td>${u.email}</td><td>${u.role}</td><td>${u.profile?.department || ''}</td><td></td>`;
+                    const actionsTd = tr.querySelector('td:last-child');
+                    const viewBtn = document.createElement('button'); viewBtn.className = 'btn small'; viewBtn.textContent = 'View';
+                    viewBtn.onclick = () => viewUser(u.email);
+                    const editBtn = document.createElement('button'); editBtn.className = 'btn small'; editBtn.textContent = 'Edit';
+                    editBtn.onclick = () => openEdit(u.email);
+                    const deactivateBtn = document.createElement('button'); deactivateBtn.className = 'btn small'; deactivateBtn.textContent = 'Deactivate';
+                    deactivateBtn.onclick = () => deactivateUser(u.email);
+                    actionsTd.append(viewBtn, document.createTextNode(' '), editBtn, document.createTextNode(' '), deactivateBtn);
+                    tbody.appendChild(tr);
+                });
+            } catch (e) { alert('Failed to load users'); }
+        }
+
+        async function viewUser(email) {
+            try { const data = await api('/api/admin/users/' + encodeURIComponent(email)); alert(JSON.stringify(data, null, 2)); } catch (e) { alert('Failed to fetch user'); }
+        }
+
+        function openEdit(email) {
+            // fetch and prefill modal for update
+            api('/api/admin/users/' + encodeURIComponent(email)).then(data => {
+                document.getElementById('modalTitle').textContent = 'Edit ' + email;
+                const form = document.getElementById('userForm'); form.email.value = data.email; form.first_name.value = data.profile?.name?.split(' ')[0] || ''; form.last_name.value = data.profile?.name?.split(' ')[1] || ''; form.role.value = data.role || 'employee';
+                form.dataset.edit = email; showModal();
+            }).catch(() => alert('Failed'));
+        }
+
+        async function deactivateUser(email) {
+            if (!confirm('Deactivate ' + email + '?')) return;
+            try { await api('/api/admin/users/' + encodeURIComponent(email) + '/deactivate', { method: 'POST' }); alert('Deactivated'); loadUsers(); } catch (e) { alert('Failed to deactivate'); }
+        }
+
+        // Accessible modal helpers: focus trap, restore focus, close on Escape
+        let lastFocused = null;
+        function focusableElements(root) {
+            return Array.from(root.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+                .filter(el => el.offsetParent !== null);
+        }
+        function showModal() {
+            const modal = document.getElementById('modal'); const dialog = modal.querySelector('.modal-dialog');
+            lastFocused = document.activeElement;
+            modal.style.display = 'flex'; modal.setAttribute('aria-hidden', 'false');
+            dialog.focus();
+            // trap tab
+            function onKey(e) {
+                if (e.key === 'Escape') { e.preventDefault(); hideModal(); }
+                if (e.key === 'Tab') {
+                    const focusables = focusableElements(dialog);
+                    if (focusables.length === 0) { e.preventDefault(); return; }
+                    const idx = focusables.indexOf(document.activeElement);
+                    if (e.shiftKey && idx === 0) { e.preventDefault(); focusables[focusables.length - 1].focus(); }
+                    else if (!e.shiftKey && idx === focusables.length - 1) { e.preventDefault(); focusables[0].focus(); }
+                }
+            }
+            dialog._onKey = onKey; document.addEventListener('keydown', onKey);
+        }
+        function hideModal() {
+            const modal = document.getElementById('modal'); const dialog = modal.querySelector('.modal-dialog');
+            modal.style.display = 'none'; modal.setAttribute('aria-hidden', 'true');
+            if (dialog && dialog._onKey) { document.removeEventListener('keydown', dialog._onKey); delete dialog._onKey; }
+            if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+        }
+
+        document.getElementById('newUserBtn').addEventListener('click', () => { document.getElementById('modalTitle').textContent = 'Create User'; document.getElementById('userForm').reset(); delete document.getElementById('userForm').dataset.edit; showModal(); });
+        document.getElementById('cancelBtn').addEventListener('click', hideModal);
+        document.getElementById('modalClose').addEventListener('click', hideModal);
+
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); const form = e.target; const payload = Object.fromEntries(new FormData(form).entries());
+            try {
+                if (form.dataset.edit) { // update
+                    await api('/api/admin/users/' + encodeURIComponent(form.dataset.edit) + '/update', { method: 'POST', body: JSON.stringify({ role: payload.role, profile: { name: (payload.first_name || '') + ' ' + (payload.last_name || '') } }) });
+                    hideModal(); loadUsers();
+                } else {
+                    await api('/api/admin/users', { method: 'POST', body: JSON.stringify(Object.assign({}, payload, { password: 'TempPass123' })) });
+                    hideModal(); loadUsers();
+                }
+            } catch (err) { alert('Save failed'); }
+        });
+
+        // init
+        loadUsers();
+    </script>
+</body>
+
+</html>

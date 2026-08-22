@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: dayflow-hrms
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: "python main.py"
+    envVars: []
+    instanceCount: 1
+    instanceType: starter
