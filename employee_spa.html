@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Employee Desk — Dayflow</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 20px;
+            color: #17211c
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px
+        }
+
+        button {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #dce5df;
+            background: #fbfcfa;
+            cursor: pointer
+        }
+
+        pre {
+            background: #f5f7f3;
+            padding: 12px;
+            border-radius: 8px
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Employee Desk (SPA)</h1>
+    <div class="controls">
+        <button id="profile">Profile</button>
+        <button id="attendance">Attendance</button>
+        <button id="leave">My Leaves</button>
+        <button id="payroll">Payroll</button>
+        <button id="logout">Logout</button>
+    </div>
+    <div id="content">
+        <p>Choose a view.</p>
+    </div>
+    <script>
+        async function api(path, opts = {}) {
+            const res = await fetch(path, Object.assign({ credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } }, opts));
+            if (!res.ok) throw res;
+            return res.json();
+        }
+        document.getElementById('profile').addEventListener('click', async () => {
+            try { const p = await api('/api/profile'); document.getElementById('content').innerHTML = `<pre>${JSON.stringify(p, null, 2)}</pre>` } catch (e) { alert('Failed to load profile') }
+        });
+        document.getElementById('attendance').addEventListener('click', async () => {
+            try { const p = await api('/api/attendance'); document.getElementById('content').innerHTML = `<pre>${JSON.stringify(p, null, 2)}</pre>` } catch (e) { alert('Failed') }
+        });
+        document.getElementById('leave').addEventListener('click', async () => {
+            try { const p = await api('/api/leave'); document.getElementById('content').innerHTML = `<pre>${JSON.stringify(p, null, 2)}</pre>` } catch (e) { alert('Failed') }
+        });
+        document.getElementById('payroll').addEventListener('click', async () => {
+            try { const p = await api('/api/payroll'); document.getElementById('content').innerHTML = `<pre>${JSON.stringify(p, null, 2)}</pre>` } catch (e) { alert('Failed') }
+        });
+        document.getElementById('logout').addEventListener('click', () => { document.cookie = 'session=; Path=/; Max-Age=0'; location = '/'; });
+    </script>
+</body>
+
+</html>
